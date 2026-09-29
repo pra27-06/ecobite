@@ -1,99 +1,52 @@
-# EcoBite AI — Canteen Intelligence & Kitchen Operations
+# EcoBite AI — Canteen Owner & Demand Intelligence
 
-> **Document Version:** 1.0.0 (Canteen B2B Intelligence Specification)  
+> **Document Version:** 2.0.0 (Student Demand Intelligence Doctrine)  
 > **Status:** Active Reference Architecture  
 > **Target Audience:** Canteen Operators, University Dining Services, Hackathon Evaluators
 
 ---
 
-## 1. Overview & Business Value
+## 1. Overview & Architectural Doctrine
 
-While students use EcoBite AI to make healthier, more affordable meal decisions, campus canteen operators struggle with a different challenge: **unpredictable daily kitchen demand and operational food waste**.
+EcoBite AI provides **Student Demand Intelligence**, not sales accounting or physical food waste sensing.
 
-Campus dining halls typically prepare large batches of food each morning with little visibility into student cravings, resulting in:
-- High preparation of low-demand items that get thrown out at the end of the day.
-- Midday stockouts of high-demand healthy items (e.g. *Paneer Sandwiches* or *Rajma Chawal*).
-- Excessive reliance on commercial deep fryers due to perceived demand.
+### What EcoBite Is:
+- **Pre-Purchase Demand Aggregator**: Captures authentic student interest through dish searches and Smart Swap choices before food is bought or consumed.
+- **Decision Support Tool**: Informs cafeteria staff on peak student preferences, high-converting healthy alternatives, and dishes with low student appetite.
 
-The **EcoBite Canteen Intelligence Dashboard** (`/owner`) closes this loop by connecting **student pre-purchase demand signals** directly with **kitchen production adjustments**.
-
----
-
-## 2. The Student-to-Kitchen Data Loop
-
-```
-  [STUDENT ECOBITE APP]
-  • Dish searches (e.g. 188 Chole Bhature queries)
-  • Plate photo scans
-  • Smart Swap recommendations
-  • Accepted healthy swaps (e.g. 42 chose Paneer Sandwich)
-          │
-          ▼
-  [ANONYMOUS AGGREGATION ENGINE]
-  • Aggregates queries by campusId (e.g. MAIT)
-  • Strips all user identifiers (UID, email, name)
-  • Computes item-level demand volume & swap acceptance rate
-          │
-          ▼
-  [CANTEEN OWNER DASHBOARD (/owner)]
-  • Live item-level demand signals
-  • Kitchen batch recommendations (+15% prep on Paneer Sandwich)
-  • Waste mitigation alerts (cut prep on Singapori Chowmein)
-  • Real-time stock toggle (In-Stock / Sold-Out)
-```
+### What EcoBite Is NOT:
+- **NOT a POS or Cash Register Tracker**: Does not track cash/UPI payments or transaction receipts.
+- **NOT a Physical Waste Sensor**: Does not place scales or optical cameras in garbage cans.
+- **NOT an Inventory Surveillance Tool**: Does not track raw warehouse grams or chef prep speed.
 
 ---
 
-## 3. Core Dashboard Modules
+## 2. Demand Signal Types & Weighting Formula
 
-### 3.1 Today's Operational Overview
-- **Total Campus Meals**: Volume across all mapped cafeteria counters.
-- **Estimated Daily Revenue**: Grounded in audited MAIT menu prices (₹15 – ₹150).
-- **Peak Demand Dish**: Top queried item by students on campus.
-- **Estimated Excess**: Total projected unconsumed portions based on daily prep vs sold volume.
+EcoBite records three atomic, privacy-safe demand signals within each campus boundary:
 
-### 3.2 Student Demand Signals & Healthy Conversions
-The dashboard tracks how EcoBite's Smart Swap engine influences real purchasing:
-- **Conversion Example**: 42 students searching for *Chole Bhature* (₹70) accepted swaps to *Paneer Sandwich* (₹30) or *Rajma Chawal* (₹70).
-- **Operational Takeaway**: Informs kitchen staff to reallocate morning ingredient prep toward high-satiety, high-margin fresh items.
+| Signal Event Type | Description | Weight | Operational Significance |
+| :--- | :--- | :--- | :--- |
+| `SEARCH` | A student queries or evaluates this dish | **+1** | Measures raw campus interest & pre-purchase curiosity |
+| `SMART_SWAP_ACCEPTED` | A student selects this dish as a healthier alternative | **+3** | Strong positive indicator of healthy conversion & high student preference |
+| `SMART_SWAP_REJECTED` | A student declines this dish when recommended | **-2** | Direct negative indicator showing taste resistance or price sensitivity |
 
-### 3.3 Menu Intelligence & Waste Mitigation Table
-Provides item-by-item operational metrics:
-- **Dish Name & Stall**: Linked to physical canteen (e.g. *Amul Shop*, *Food Mast*, *Juice Point*).
-- **Canonical Category**: `MEAL`, `SNACK`, `BEVERAGE`, `DESSERT`.
-- **Verified Ground-Truth Price**: Sourced from audited menu boards.
-- **Daily Prep vs Sold Progress**: Visual percentage indicator of consumed stock.
-- **Waste Risk Index**:
-  - `LOW`: Sold $\ge 85\%$ of prepared batch.
-  - `MEDIUM`: Sold $60\% - 84\%$.
-  - `HIGH`: Sold $< 60\%$ (indicates systematic over-preparation).
-- **Recommended Kitchen Action**: Concrete operational suggestions (e.g. *"Reduce preparation batch by 30%"*, *"Prepare strictly on-demand to eliminate oil/prep excess"*).
-- **Live Stock Status**: Operator toggle to mark items Sold Out or In Stock in real-time.
+### Dynamic Demand Score Formula:
+$$\text{Demand Score} = (\text{Searches} \times 1) + (\text{Swaps Accepted} \times 3) + (\text{Swaps Rejected} \times -2)$$
 
 ---
 
-## 4. Ethical Data Boundaries: Demo vs Operational Waste Data
+## 3. Privacy Boundary & Zero Student PII
 
-> [!IMPORTANT]
-> **No Fake Sensor Claims**: EcoBite AI does **not** claim physical sensor-based food waste detection from student plate scans alone. 
-
-### Operational Distinctions:
-1. **Demo / Sample Data (Current Prototype)**:
-   - Daily prepared quantities, sold units, and excess estimations are realistic demonstration figures designed to showcase the B2B dashboard capability for hackathon judges.
-   - All demo figures are explicitly labeled with `DEMO / SAMPLE DATA` badges.
-2. **Authoritative Ground Truth**:
-   - Menu item names, categories, physical counters, and INR (₹) prices are 100% verified against audited MAIT physical menu board photographs.
-3. **Future Production Integrations**:
-   - In production deployments, actual waste figures connect to:
-     - Kitchen inventory management sheets.
-     - Campus Point-of-Sale (POS) transaction logs.
-     - Direct chef/operator end-of-day kitchen scale logging.
+All demand signals conform to strict data-minimization principles:
+- **No User IDs, Names, or Emails**: Demand signals are completely decoupled from student accounts.
+- **No Personal Trajectories**: Canteen owners cannot see individual student dining histories.
+- **Campus Aggregation**: Signals are aggregated solely at the campus level (`MAIT`) to safeguard user privacy.
 
 ---
 
-## 5. Strict Student Privacy Guarantees
+## 4. Student Campus Access QR Generator
 
-The Canteen Owner Dashboard strictly enforces zero exposure of personal identifiable information (PII):
-- **Zero Student Names**: No student profiles or accounts are shown.
-- **Zero Personal Histories**: Operators cannot inspect what an individual student ate.
-- **Aggregated Heatmaps Only**: All metrics represent anonymous campus-wide totals (e.g. *"Paneer Sandwich: 142 searches this week"*).
+Canteen owners can generate official campus verification QR codes directly from the dashboard (`[ Generate Student Campus QR ]`):
+- Displays the secure institutional token (`MAIT-DELHI-01`).
+- Ready for counter display or printout so students can quickly scan and verify their session.

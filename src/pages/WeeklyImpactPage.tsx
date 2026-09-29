@@ -66,7 +66,7 @@ export const WeeklyImpactPage: React.FC = () => {
     <div className="max-w-5xl mx-auto space-y-8">
       {/* Header */}
       <PageHeader
-        title="Weekly Impact Dashboard"
+        title="My Impact"
         description="Review personal financial savings and estimated environmental benefits earned through conscious campus food choices."
         badge={
           <Badge variant="emerald" size="md">
@@ -79,7 +79,7 @@ export const WeeklyImpactPage: React.FC = () => {
       {/* 4 Core Impact Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          label="Money Saved"
+          label="Total Savings"
           value={`₹${summary?.moneySaved || 0}`}
           subtext="accumulated via Smart Swaps"
           icon={<IndianRupee className="w-4 h-4" />}
@@ -87,7 +87,7 @@ export const WeeklyImpactPage: React.FC = () => {
         />
 
         <StatCard
-          label="Smart Swaps"
+          label="Smart Swaps Selected"
           value={summary?.smartSwapsCount || 0}
           subtext="healthier meals chosen"
           icon={<Sparkles className="w-4 h-4" />}
@@ -95,8 +95,8 @@ export const WeeklyImpactPage: React.FC = () => {
         />
 
         <StatCard
-          label="Estimated CO₂e Avoided"
-          value={`${summary?.estimatedCo2Kg || 0} kg`}
+          label="Environmental Impact"
+          value={`${summary?.estimatedCo2Kg || 0} kg CO₂e`}
           subtext="approx. carbon reduction"
           icon={<Globe className="w-4 h-4" />}
           variant="slate"
@@ -119,7 +119,7 @@ export const WeeklyImpactPage: React.FC = () => {
           </div>
           <div className="max-w-md mx-auto space-y-2">
             <h3 className="text-lg font-bold text-slate-900">
-              Your impact journey starts with your first Smart Swap.
+              Your first Smart Swap will start your savings journey.
             </h3>
             <p className="text-xs text-slate-500 leading-relaxed">
               No smart swaps recorded yet. Whenever you accept a healthier or more affordable campus food recommendation, your real pocket savings (₹) and estimated carbon reductions will appear here.

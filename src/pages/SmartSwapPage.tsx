@@ -10,6 +10,7 @@ import {
   Globe, 
   MapPin, 
   Check, 
+  X,
   Info, 
   AlertTriangle,
   ShieldAlert
@@ -24,6 +25,7 @@ import { useAuth } from '../hooks/useAuth';
 import { swapService } from '../services/swapService';
 import { aiService } from '../services/aiService';
 import { impactService } from '../services/impactService';
+import { demandService } from '../services/demandService';
 import type { AIFoodAnalysisResult, SmartSwapResult } from '../types';
 
 export const SmartSwapPage: React.FC = () => {
@@ -35,8 +37,8 @@ export const SmartSwapPage: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState(true);
   const [swapData, setSwapData] = useState<SmartSwapResult | null>(null);
-  const [isLogged, setIsLogged] = useState(false);
-  const [isLogging, setIsLogging] = useState(false);
+  const [decisionState, setDecisionState] = useState<'idle' | 'accepted' | 'rejected'>('idle');
+  const [isProcessing, setIsProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
@@ -83,30 +85,76 @@ export const SmartSwapPage: React.FC = () => {
     };
   }, [foodId, isVerified, location.state]);
 
-  const handleAcceptSwap = async () => {
+  const handleSelectSwap = async () => {
     if (!swapData || !swapData.recommendedSwap) return;
-    setIsLogging(true);
+    setIsProcessing(true);
+
+    const origPrice = swapData.originalFood.price || 60;
+    const recPrice = swapData.recommendedSwap.price;
+    const moneySaved = Math.max(0, origPrice - recPrice);
 
     try {
+      // 1. Log demand signal (SMART_SWAP_ACCEPTED)
+      await demandService.recordSignal({
+        campusId: isVerified ? 'MAIT' : 'MAIT',
+        eventType: 'SMART_SWAP_ACCEPTED',
+        foodName: swapData.recommendedSwap.name,
+        originalFoodName: swapData.originalFood.name,
+        recommendedFoodName: swapData.recommendedSwap.name,
+        originalPrice: origPrice,
+        alternativePrice: recPrice,
+        moneySaved: moneySaved,
+      });
+
+      // 2. Log to user's weekly impact telemetry
       await impactService.logDecision({
         userId: currentUser?.uid || 'guest-student',
         campusId: isVerified ? 'MAIT' : 'general',
         originalFood: swapData.originalFood.name,
         selectedAlternative: swapData.recommendedSwap.name,
-        originalPrice: swapData.originalFood.price,
-        alternativePrice: swapData.recommendedSwap.price,
-        moneySaved: swapData.recommendedSwap.moneySaved,
+        originalPrice: origPrice,
+        alternativePrice: recPrice,
+        moneySaved: moneySaved,
         estimatedImpact: {
           co2SavedKg: 0.28,
         },
       });
 
-      setIsLogging(false);
-      setIsLogged(true);
+      setDecisionState('accepted');
     } catch (err) {
-      console.warn('Error recording impact decision:', err);
-      setIsLogging(false);
-      setIsLogged(true);
+      console.warn('Error recording accepted swap:', err);
+      setDecisionState('accepted');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleRejectSwap = async () => {
+    if (!swapData || !swapData.recommendedSwap) return;
+    setIsProcessing(true);
+
+    const origPrice = swapData.originalFood.price || 60;
+    const recPrice = swapData.recommendedSwap.price;
+
+    try {
+      // 1. Log demand signal (SMART_SWAP_REJECTED) - does NOT add user savings
+      await demandService.recordSignal({
+        campusId: isVerified ? 'MAIT' : 'MAIT',
+        eventType: 'SMART_SWAP_REJECTED',
+        foodName: swapData.recommendedSwap.name,
+        originalFoodName: swapData.originalFood.name,
+        recommendedFoodName: swapData.recommendedSwap.name,
+        originalPrice: origPrice,
+        alternativePrice: recPrice,
+        moneySaved: 0,
+      });
+
+      setDecisionState('rejected');
+    } catch (err) {
+      console.warn('Error recording rejected swap:', err);
+      setDecisionState('rejected');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -183,40 +231,20 @@ export const SmartSwapPage: React.FC = () => {
           </div>
           <div className="max-w-md mx-auto space-y-2">
             <h3 className="text-lg font-bold text-slate-900">
-              No verified Smart Swap is available right now.
+              No verified Smart Swap found
             </h3>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              {noSwapReason ||
-                "Your current selection already provides an optimal balance for current canteen inventory, or no verified alternatives meet the required improvement threshold."}
+            <p className="text-xs text-slate-600 leading-relaxed font-medium">
+              {noSwapReason || "No healthier verified campus option found within your price range."}
             </p>
           </div>
           <div className="pt-2">
-            <Button variant="primary" size="md" onClick={() => navigate('/campus')}>
-              Browse All Campus Stalls
+            <Button variant="primary" size="md" onClick={() => navigate('/search')}>
+              Search Another Food
             </Button>
           </div>
         </Card>
       ) : (
         <>
-          {/* Hero Value Proposition */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-900 via-slate-900 to-slate-900 text-white shadow-sm flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
-                <Sparkles className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="text-sm sm:text-base font-extrabold tracking-tight">
-                  You don't just get a score. You get a better option you can actually buy.
-                </h2>
-                <p className="text-xs text-slate-300">
-                  {isVerified
-                    ? 'Grounded in authentic MAIT canteen menus, verified pricing, and live stall inventory.'
-                    : 'Grounded in national college nutrition and affordability benchmarks.'}
-                </p>
-              </div>
-            </div>
-          </div>
-
           {/* Main Before/After Comparison Flow */}
           <div className="space-y-4">
             {/* Your Current Choice */}
@@ -263,7 +291,7 @@ export const SmartSwapPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Recommended Alternative */}
+            {/* Recommended Alternative Card */}
             <div className="p-6 rounded-2xl bg-gradient-to-br from-emerald-50 via-white to-emerald-50/40 border-2 border-emerald-300 shadow-sm space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -289,7 +317,7 @@ export const SmartSwapPage: React.FC = () => {
                       {recommendedSwap.name}
                     </h3>
 
-                    {/* Canteen Location & Availability - Strictly from Firestore when verified */}
+                    {/* Canteen Location & Availability */}
                     {isVerified && recommendedSwap.canteenName ? (
                       <div className="space-y-1 mt-1 text-xs text-slate-600">
                         <div className="flex items-center gap-1.5">
@@ -429,50 +457,83 @@ export const SmartSwapPage: React.FC = () => {
             </ul>
           </Card>
 
-          {/* Action Decision Container */}
-          <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div>
-              <div className="text-sm font-bold text-slate-900">
-                {isLogged ? 'Decision Logged in Weekly Impact!' : 'Accept this recommendation?'}
+          {/* Explicit Student Decision Container: SELECT vs REJECT */}
+          <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-md space-y-4">
+            {decisionState === 'accepted' ? (
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-3">
+                <div className="flex items-center gap-2.5 text-emerald-900 font-bold text-sm">
+                  <Check className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <span>
+                    Smart Swap selected! You saved ₹{recommendedSwap.moneySaved} and logged conscious impact.
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 pt-1">
+                  <Link to="/impact">
+                    <Button variant="primary" size="sm">
+                      View My Impact
+                    </Button>
+                  </Link>
+                  <Link to="/search">
+                    <Button variant="outline" size="sm">
+                      Search Another Dish
+                    </Button>
+                  </Link>
+                </div>
               </div>
-              <p className="text-xs text-slate-500">
-                {isLogged
-                  ? `Telemetry saved. You saved ₹${recommendedSwap.moneySaved} and logged conscious impact.`
-                  : 'Accepting this swap records your savings and updates your weekly sustainability profile.'}
-              </p>
-            </div>
+            ) : decisionState === 'rejected' ? (
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                <div className="flex items-center gap-2.5 text-slate-700 font-medium text-xs sm:text-sm">
+                  <Info className="w-4 h-4 text-slate-500 shrink-0" />
+                  <span>
+                    Got it. Your preference helps EcoBite understand campus food choices. (₹0 savings logged)
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 pt-1">
+                  <Link to="/search">
+                    <Button variant="primary" size="sm">
+                      Search Another Food
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <div className="text-sm font-bold text-slate-900">
+                    Choose Your Food Decision
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    Your choice signals authentic student appetite to campus kitchens.
+                  </p>
+                </div>
 
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              {isLogged ? (
-                <Link to="/impact" className="w-full sm:w-auto">
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  {/* SELECT THIS SWAP BUTTON */}
                   <Button
                     variant="primary"
                     size="md"
+                    isLoading={isProcessing}
                     leftIcon={<Check className="w-4 h-4" />}
-                    className="w-full sm:w-auto"
+                    onClick={handleSelectSwap}
+                    className="flex-1 sm:flex-initial justify-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
                   >
-                    View Impact Dashboard
+                    ✓ SELECT THIS SWAP {recommendedSwap.moneySaved > 0 && `(Save ₹${recommendedSwap.moneySaved})`}
                   </Button>
-                </Link>
-              ) : (
-                <Button
-                  variant="primary"
-                  size="md"
-                  isLoading={isLogging}
-                  leftIcon={<CheckCircle2 className="w-4 h-4" />}
-                  onClick={handleAcceptSwap}
-                  className="w-full sm:w-auto"
-                >
-                  Accept Smart Swap {recommendedSwap.moneySaved > 0 && `(Save ₹${recommendedSwap.moneySaved})`}
-                </Button>
-              )}
 
-              <Link to="/search">
-                <Button variant="outline" size="md">
-                  Explore More
-                </Button>
-              </Link>
-            </div>
+                  {/* REJECT BUTTON */}
+                  <Button
+                    variant="outline"
+                    size="md"
+                    isLoading={isProcessing}
+                    leftIcon={<X className="w-4 h-4 text-rose-500" />}
+                    onClick={handleRejectSwap}
+                    className="flex-1 sm:flex-initial justify-center border-slate-300 text-slate-700 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-700"
+                  >
+                    ✕ REJECT
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}

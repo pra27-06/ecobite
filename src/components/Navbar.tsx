@@ -30,8 +30,7 @@ export const Navbar: React.FC = () => {
           {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center gap-1">
             <NavLink
-              to="/"
-              end
+              to="/student"
               className={({ isActive }) =>
                 `px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
                   isActive
@@ -40,7 +39,7 @@ export const Navbar: React.FC = () => {
                 }`
               }
             >
-              Home
+              Student Portal
             </NavLink>
 
             <NavLink

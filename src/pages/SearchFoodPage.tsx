@@ -9,6 +9,7 @@ import { EmptyState } from '../components/EmptyState';
 import { searchMockFoods } from '../data/mockFoods';
 import { FOOD_CATEGORIES } from '../data/index';
 import { aiService } from '../services/aiService';
+import { demandService } from '../services/demandService';
 
 export const SearchFoodPage: React.FC = () => {
   const navigate = useNavigate();
@@ -27,6 +28,14 @@ export const SearchFoodPage: React.FC = () => {
   const handleAnalyzeQuery = async (searchStr: string) => {
     const cleanStr = searchStr.trim();
     if (!cleanStr) return;
+
+    // Record demand signal (SEARCH)
+    demandService.recordSignal({
+      campusId: 'MAIT',
+      eventType: 'SEARCH',
+      foodName: cleanStr,
+      originalFoodName: cleanStr,
+    }).catch(() => {});
 
     setIsAnalyzing(true);
     try {

@@ -4,7 +4,7 @@ import { Home, Search, Camera, TrendingUp, User } from 'lucide-react';
 
 export const MobileNav: React.FC = () => {
   const navItems = [
-    { to: '/', label: 'Home', icon: Home },
+    { to: '/student', label: 'Home', icon: Home },
     { to: '/search', label: 'Search', icon: Search },
     { to: '/scan', label: 'Scan', icon: Camera, isSpecial: true },
     { to: '/impact', label: 'Impact', icon: TrendingUp },

@@ -96,16 +96,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setError(null);
   };
 
-  const setSimulatedRole = (role: 'student' | 'campus_admin', campusId: string | null) => {
+  const setSimulatedRole = (role: import('../types').UserRole, campusId: string | null) => {
     setUserDoc((prev) => {
+      const isPrivileged = role === 'campus_admin' || role === 'canteen_owner';
+      const roleName = role === 'campus_admin' 
+        ? 'MAIT Campus Administrator' 
+        : role === 'canteen_owner' 
+        ? 'MAIT Canteen Manager' 
+        : 'Guest Student';
+      const roleEmail = role === 'campus_admin' 
+        ? 'admin@mait.ac.in' 
+        : role === 'canteen_owner' 
+        ? 'owner@mait.ac.in' 
+        : '';
+
       if (!prev) {
         return {
-          userId: 'admin-evaluator',
-          name: role === 'campus_admin' ? 'MAIT Campus Administrator' : 'Guest Student',
-          email: role === 'campus_admin' ? 'admin@mait.ac.in' : '',
+          userId: role === 'canteen_owner' ? 'canteen-owner-evaluator' : 'admin-evaluator',
+          name: roleName,
+          email: roleEmail,
           role,
           campusId,
-          campusVerified: role === 'campus_admin',
+          campusVerified: isPrivileged,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
@@ -114,7 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...prev,
         role,
         campusId,
-        campusVerified: role === 'campus_admin' ? true : prev.campusVerified,
+        campusVerified: isPrivileged ? true : prev.campusVerified,
       };
     });
   };

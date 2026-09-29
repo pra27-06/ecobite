@@ -37,6 +37,7 @@ export const SWAP_CONFIG = {
   healthDominanceMultiplier: 1000,
   maxSavingsBonusPoints: 50,
   minHealthThresholdForUnhealthyOriginal: 0.2, // For foods with health < 7.0, must improve health
+  MAX_PRICE_DEVIATION: 0.10, // Max 10% deviation above original price (prefer <= original)
 };
 
 export const swapService = {
@@ -189,18 +190,28 @@ export const swapService = {
         const moneySaved = originalPrice - item.price;
         const sustDelta = estimatedCandidateSustainability - origSustainability;
 
-        // HEALTH FILTER CRITERIA:
+        // 1. PRICE PROXIMITY RULE (MAX_PRICE_DEVIATION = 10%)
+        // The candidate should normally cost LESS THAN OR CLOSE TO the original food.
+        const maxAllowedPrice = Math.round(originalPrice * (1 + SWAP_CONFIG.MAX_PRICE_DEVIATION));
+        if (item.price > maxAllowedPrice) {
+          continue; // Strictly reject items exceeding the 10% price tolerance ceiling
+        }
+        // If candidate is slightly more expensive (within 10%), require meaningful health improvement
+        if (item.price > originalPrice && healthDelta < 0.8) {
+          continue;
+        }
+
+        // 2. HEALTH FILTER CRITERIA:
         // - If original food is relatively unhealthy (< 7.0), alternative MUST improve health
         if (origHealth < 7.0 && healthDelta < SWAP_CONFIG.minHealthThresholdForUnhealthyOriginal) {
           continue;
         }
-        // - If original food is already healthy (>= 7.0), alternative must maintain high health (>= 7.0)
-        //   or at least be within 0.5 of original health while offering major budget/preparation value
+        // - If original food is already healthy (>= 7.0), alternative must maintain high health (>= 6.8)
         if (origHealth >= 7.0 && estimatedCandidateHealth < 6.8) {
           continue;
         }
 
-        // COMPOSITE SCORING:
+        // 3. COMPOSITE SCORING:
         // Health improvement is the primary objective (dominant multiplier: 1000).
         // Secondary objectives (money saved and carbon footprint) act as tie-breakers.
         const savingsScore = moneySaved > 0 ? Math.min(moneySaved, 30) * 1.5 : (moneySaved === 0 ? 5 : -15);
@@ -225,7 +236,7 @@ export const swapService = {
         }
       }
 
-      // If no candidate scored high enough
+      // If no candidate scored high enough or fits within price tolerance
       if (!bestCandidate) {
         return {
           success: true,
@@ -241,7 +252,7 @@ export const swapService = {
               sustainabilityScore: origSustainability,
               source: matchedOrigMenuItem ? `MAIT (${matchedOrigMenuItem.canteenId})` : 'MAIT Campus Baseline',
             },
-            noSwapReason: `No verified ${origCategory} alternative currently available provides a significant health improvement.`,
+            noSwapReason: 'No healthier verified campus option found within your price range.',
           },
         };
       }

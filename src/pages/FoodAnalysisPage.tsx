@@ -24,6 +24,7 @@ import { useCampus } from '../hooks/useCampusAccess';
 import { MAIT_CANTEENS_DOCS } from '../data/maitMenuData';
 import { aiService } from '../services/aiService';
 import { menuService } from '../services/menuService';
+import { demandService } from '../services/demandService';
 import type { AIFoodAnalysisResult, MenuItemDoc } from '../types';
 
 export const FoodAnalysisPage: React.FC = () => {
@@ -52,6 +53,17 @@ export const FoodAnalysisPage: React.FC = () => {
       setCampusItems([]);
     }
   }, [isVerified]);
+
+  useEffect(() => {
+    if (aiAnalysis?.foodName) {
+      demandService.recordSignal({
+        campusId: isVerified ? 'MAIT' : 'MAIT',
+        eventType: 'SEARCH',
+        foodName: aiAnalysis.foodName,
+        originalFoodName: aiAnalysis.foodName,
+      }).catch(() => {});
+    }
+  }, [aiAnalysis?.foodName, isVerified]);
 
   useEffect(() => {
     // If state was already provided via navigation, initial state has it

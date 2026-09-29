@@ -3,7 +3,9 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CampusProvider } from './context/CampusContext';
 import { RootLayout } from './layouts/RootLayout';
+import { RoleSelectionLandingPage } from './pages/RoleSelectionLandingPage';
 import { HomePage } from './pages/HomePage';
+import { OwnerAuthPage } from './pages/OwnerAuthPage';
 import { CampusAccessPage } from './pages/CampusAccessPage';
 import { ScanFoodPage } from './pages/ScanFoodPage';
 import { SearchFoodPage } from './pages/SearchFoodPage';
@@ -23,7 +25,8 @@ export const App: React.FC = () => {
         <BrowserRouter basename={import.meta.env.BASE_URL}>
           <Routes>
             <Route path="/" element={<RootLayout />}>
-              <Route index element={<HomePage />} />
+              <Route index element={<RoleSelectionLandingPage />} />
+              <Route path="student" element={<HomePage />} />
               <Route path="campus" element={<CampusAccessPage />} />
               <Route path="scan" element={<ScanFoodPage />} />
               <Route path="search" element={<SearchFoodPage />} />
@@ -35,7 +38,8 @@ export const App: React.FC = () => {
               <Route path="profile" element={<ProfilePage />} />
               <Route path="admin" element={<AdminDashboardPage />} />
               <Route path="admin/mait" element={<AdminDashboardPage />} />
-              <Route path="owner" element={<CanteenOwnerDashboardPage />} />
+              <Route path="owner" element={<OwnerAuthPage />} />
+              <Route path="owner/dashboard" element={<CanteenOwnerDashboardPage />} />
               <Route path="canteen-owner" element={<CanteenOwnerDashboardPage />} />
               <Route path="context" element={<ContextPage />} />
               <Route path="*" element={<NotFoundPage />} />

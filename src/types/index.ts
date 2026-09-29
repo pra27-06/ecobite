@@ -4,7 +4,7 @@
  */
 
 // User Roles
-export type UserRole = 'student' | 'campus_admin';
+export type UserRole = 'student' | 'campus_admin' | 'canteen_owner';
 
 // User and Session (Firestore: users/{userId})
 export interface UserDoc {
@@ -212,7 +212,37 @@ export interface SmartSwapResult {
   noSwapReason?: string;
 }
 
-// Canteen Owner Operational & Demand Types
+// Demand Signal Event Types
+export type DemandEventType = 'SEARCH' | 'SMART_SWAP_ACCEPTED' | 'SMART_SWAP_REJECTED';
+
+export interface DemandSignalDoc {
+  signalId?: string;
+  campusId: string;
+  foodId?: string;
+  foodName: string;
+  menuItemId?: string;
+  eventType: DemandEventType;
+  originalFoodName?: string;
+  recommendedFoodName?: string;
+  originalPrice?: number;
+  alternativePrice?: number;
+  moneySaved?: number;
+  timestamp: string;
+}
+
+export interface DemandScoreWeights {
+  search: number;
+  swapAccepted: number;
+  swapRejected: number;
+}
+
+export const DEFAULT_DEMAND_WEIGHTS: DemandScoreWeights = {
+  search: 1,
+  swapAccepted: 3,
+  swapRejected: -2,
+};
+
+// Canteen Owner Student Demand Intelligence Types
 export interface CanteenDemandItem {
   itemId: string;
   name: string;
@@ -222,23 +252,24 @@ export interface CanteenDemandItem {
   price: number;
   searchInterest: number;
   swapAcceptedCount: number;
-  dailyPreparedQty: number;
-  dailySoldQty: number;
-  estimatedExcessQty: number;
-  wasteRisk: 'low' | 'medium' | 'high';
+  swapRejectedCount: number;
+  demandScore: number;
+  interestLevel: 'high' | 'medium' | 'lower';
+  acceptanceStatus: 'strong' | 'moderate' | 'lower_acceptance';
   recommendation: string;
   isAvailable: boolean;
-  isDemoSample: true;
+  isDemoSample?: boolean;
 }
 
-export interface CanteenOperationalOverview {
+export interface CanteenDemandOverview {
   campusId: string;
   date: string;
-  totalOrders: number;
-  totalRevenueEstimate: number;
+  totalSignalsToday: number;
+  totalSearchesToday: number;
+  totalSwapsAcceptedToday: number;
+  totalSwapsRejectedToday: number;
   mostDemandedItem: string;
-  lowestDemandedItem: string;
-  totalExcessMeals: number;
-  overallWastePercentage: number;
-  isDemoSample: true;
+  mostAcceptedSwap: string;
+  mostRejectedSwap: string;
+  isDemoSample?: boolean;
 }

@@ -1,26 +1,28 @@
 /**
- * EcoBite AI - MAIT Canteen Owner Operational & Demand Dataset
+ * EcoBite AI - MAIT Canteen Owner Student Demand Dataset
  * 
  * STRICT ARCHITECTURAL & ETHICAL STANDARDS:
- * 1. ZERO Fabricated Pricing: Every dish price (₹) is grounded in verified MAIT menu boards.
- * 2. DEMO SAMPLE DATA TRANSPARENCY: Operational kitchen figures (prepared/sold/excess)
- *    are explicitly marked as demonstration metrics. EcoBite does not claim physical
- *    sensor-based real-time waste measurements without actual kitchen scale/POS integrations.
- * 3. STRICT PRIVACY BOUNDARY: Zero Student PII. Only aggregated campus-level demand
- *    signals (search counts, swap interest) are displayed.
+ * 1. ZERO Fabricated Sales/Revenue: EcoBite does not track cash registers or sales volumes.
+ * 2. ZERO Fake Physical Food Waste: EcoBite does not claim sensor-based waste kg.
+ * 3. STUDENT DEMAND INTELLIGENCE: Captures real pre-purchase demand signals:
+ *    - Search Queries
+ *    - Smart Swap Acceptances
+ *    - Smart Swap Rejections
+ * 4. STRICT PRIVACY BOUNDARY: Zero Student PII. Only aggregated signals are displayed.
  */
 
-import type { CanteenDemandItem, CanteenOperationalOverview } from '../types';
+import type { CanteenDemandItem, CanteenDemandOverview } from '../types';
 
-export const MAIT_CANTEEN_OVERVIEW: CanteenOperationalOverview = {
+export const MAIT_CANTEEN_OVERVIEW: CanteenDemandOverview = {
   campusId: 'MAIT',
   date: new Date().toISOString().split('T')[0],
-  totalOrders: 648,
-  totalRevenueEstimate: 31450,
+  totalSignalsToday: 1042,
+  totalSearchesToday: 820,
+  totalSwapsAcceptedToday: 168,
+  totalSwapsRejectedToday: 54,
   mostDemandedItem: 'Chole Bhature (Food Mast)',
-  lowestDemandedItem: 'Singapori Chowmein (Food Mast)',
-  totalExcessMeals: 48,
-  overallWastePercentage: 7.4,
+  mostAcceptedSwap: 'Paneer Sandwich (Amul Shop)',
+  mostRejectedSwap: 'Singapori Chowmein (Food Mast)',
   isDemoSample: true,
 };
 
@@ -33,12 +35,12 @@ export const MAIT_CANTEEN_DEMAND_ITEMS: CanteenDemandItem[] = [
     canteenName: 'Food Mast',
     price: 70, // Verified MAIT price
     searchInterest: 188,
-    swapAcceptedCount: 42, // Students who accepted smart swap from this item to healthier meals
-    dailyPreparedQty: 120,
-    dailySoldQty: 114,
-    estimatedExcessQty: 6,
-    wasteRisk: 'low',
-    recommendation: 'High campus demand. Maintain current preparation batch size.',
+    swapAcceptedCount: 42,
+    swapRejectedCount: 12,
+    demandScore: 290, // (188*1) + (42*3) + (12*-2) = 188 + 126 - 24 = 290
+    interestLevel: 'high',
+    acceptanceStatus: 'strong',
+    recommendation: 'Peak student interest. Maintain morning batch readiness for lunch rush.',
     isAvailable: true,
     isDemoSample: true,
   },
@@ -50,12 +52,12 @@ export const MAIT_CANTEEN_DEMAND_ITEMS: CanteenDemandItem[] = [
     canteenName: 'Amul Shop',
     price: 30, // Verified MAIT price
     searchInterest: 142,
-    swapAcceptedCount: 76, // Frequently selected as healthy swap alternative!
-    dailyPreparedQty: 85,
-    dailySoldQty: 83,
-    estimatedExcessQty: 2,
-    wasteRisk: 'low',
-    recommendation: 'Top-performing healthy swap. Consider increasing morning preparation by 15%.',
+    swapAcceptedCount: 76,
+    swapRejectedCount: 8,
+    demandScore: 354, // (142*1) + (76*3) + (8*-2) = 142 + 228 - 16 = 354
+    interestLevel: 'high',
+    acceptanceStatus: 'strong',
+    recommendation: 'Top-performing healthy swap. High student conversion rate from fried meals.',
     isAvailable: true,
     isDemoSample: true,
   },
@@ -68,11 +70,11 @@ export const MAIT_CANTEEN_DEMAND_ITEMS: CanteenDemandItem[] = [
     price: 70, // Verified MAIT price
     searchInterest: 134,
     swapAcceptedCount: 68,
-    dailyPreparedQty: 95,
-    dailySoldQty: 90,
-    estimatedExcessQty: 5,
-    wasteRisk: 'low',
-    recommendation: 'Steady lunchtime favorite. High nutritional value with minimal waste.',
+    swapRejectedCount: 6,
+    demandScore: 326, // 134 + 204 - 12 = 326
+    interestLevel: 'high',
+    acceptanceStatus: 'strong',
+    recommendation: 'Consistent lunch demand. Strong student acceptance as healthy whole meal.',
     isAvailable: true,
     isDemoSample: true,
   },
@@ -85,11 +87,11 @@ export const MAIT_CANTEEN_DEMAND_ITEMS: CanteenDemandItem[] = [
     price: 70, // Verified MAIT price
     searchInterest: 98,
     swapAcceptedCount: 39,
-    dailyPreparedQty: 70,
-    dailySoldQty: 65,
-    estimatedExcessQty: 5,
-    wasteRisk: 'low',
-    recommendation: 'Balanced lunch demand. Maintain stock.',
+    swapRejectedCount: 14,
+    demandScore: 187, // 98 + 117 - 28 = 187
+    interestLevel: 'medium',
+    acceptanceStatus: 'moderate',
+    recommendation: 'Steady student interest. Reliable staple for daily batch planning.',
     isAvailable: true,
     isDemoSample: true,
   },
@@ -102,11 +104,11 @@ export const MAIT_CANTEEN_DEMAND_ITEMS: CanteenDemandItem[] = [
     price: 20, // Verified MAIT price
     searchInterest: 112,
     swapAcceptedCount: 28,
-    dailyPreparedQty: 80,
-    dailySoldQty: 74,
-    estimatedExcessQty: 6,
-    wasteRisk: 'low',
-    recommendation: 'Popular afternoon snack. Reheat in small batches.',
+    swapRejectedCount: 16,
+    demandScore: 164, // 112 + 84 - 32 = 164
+    interestLevel: 'medium',
+    acceptanceStatus: 'moderate',
+    recommendation: 'Frequent afternoon search queries. Students often look for quick snack options.',
     isAvailable: true,
     isDemoSample: true,
   },
@@ -119,11 +121,11 @@ export const MAIT_CANTEEN_DEMAND_ITEMS: CanteenDemandItem[] = [
     price: 15, // Verified MAIT price
     searchInterest: 210,
     swapAcceptedCount: 15,
-    dailyPreparedQty: 240,
-    dailySoldQty: 235,
-    estimatedExcessQty: 5,
-    wasteRisk: 'low',
-    recommendation: 'Highest volume beverage across campus. Fresh on-demand brewing prevents spoilage.',
+    swapRejectedCount: 4,
+    demandScore: 247, // 210 + 45 - 8 = 247
+    interestLevel: 'high',
+    acceptanceStatus: 'strong',
+    recommendation: 'Highest volume beverage search on campus. On-demand brewing aligns naturally with demand.',
     isAvailable: true,
     isDemoSample: true,
   },
@@ -133,14 +135,14 @@ export const MAIT_CANTEEN_DEMAND_ITEMS: CanteenDemandItem[] = [
     category: 'BEVERAGE',
     canteenId: 'juice-point',
     canteenName: 'Juice Point',
-    price: 40, // Verified MAIT price (Small)
+    price: 40, // Verified MAIT price
     searchInterest: 84,
     swapAcceptedCount: 52,
-    dailyPreparedQty: 60,
-    dailySoldQty: 58,
-    estimatedExcessQty: 2,
-    wasteRisk: 'low',
-    recommendation: 'Fresh pressed to order. Zero prepared beverage waste.',
+    swapRejectedCount: 5,
+    demandScore: 230, // 84 + 156 - 10 = 230
+    interestLevel: 'medium',
+    acceptanceStatus: 'strong',
+    recommendation: 'High acceptance when suggested as healthy alternative to bottled sugary drinks.',
     isAvailable: true,
     isDemoSample: true,
   },
@@ -153,73 +155,36 @@ export const MAIT_CANTEEN_DEMAND_ITEMS: CanteenDemandItem[] = [
     price: 120, // Verified MAIT price
     searchInterest: 64,
     swapAcceptedCount: 18,
-    dailyPreparedQty: 40,
-    dailySoldQty: 34,
-    estimatedExcessQty: 6,
-    wasteRisk: 'medium',
-    recommendation: 'Moderate demand. Cook pasta portions upon order.',
+    swapRejectedCount: 22,
+    demandScore: 74, // 64 + 54 - 44 = 74
+    interestLevel: 'medium',
+    acceptanceStatus: 'moderate',
+    recommendation: 'Higher price point leads to some swap hesitations. Cook to order rather than pre-batching.',
     isAvailable: true,
     isDemoSample: true,
   },
   {
-    itemId: 'as-009',
-    name: 'Fruit Chill',
-    category: 'DESSERT',
-    canteenId: 'amul-shop',
-    canteenName: 'Amul Shop',
-    price: 20, // Verified MAIT price
-    searchInterest: 38,
-    swapAcceptedCount: 4,
-    dailyPreparedQty: 30,
-    dailySoldQty: 25,
-    estimatedExcessQty: 5,
-    wasteRisk: 'low',
-    recommendation: 'Packaged freezer item. Extended shelf-life; no immediate waste risk.',
-    isAvailable: true,
-    isDemoSample: true,
-  },
-  {
-    itemId: 'fm-011',
+    itemId: 'fm-005',
     name: 'Singapori Chowmein',
     category: 'MEAL',
     canteenId: 'food-mast',
     canteenName: 'Food Mast',
-    price: 120, // Verified MAIT price
+    price: 90, // Verified MAIT price
     searchInterest: 26,
-    swapAcceptedCount: 8,
-    dailyPreparedQty: 45,
-    dailySoldQty: 22,
-    estimatedExcessQty: 23,
-    wasteRisk: 'high',
-    recommendation: 'Low student demand with high excess. Consider reducing daily prep batch by 30%.',
-    isAvailable: true,
-    isDemoSample: true,
-  },
-  {
-    itemId: 'as-014',
-    name: 'Spiral Potato',
-    category: 'SNACK',
-    canteenId: 'amul-shop',
-    canteenName: 'Amul Shop',
-    price: 50, // Verified MAIT price
-    searchInterest: 32,
     swapAcceptedCount: 6,
-    dailyPreparedQty: 35,
-    dailySoldQty: 18,
-    estimatedExcessQty: 17,
-    wasteRisk: 'high',
-    recommendation: 'Low re-heat tolerance. Prepare skewered potatoes strictly on-demand.',
-    isAvailable: true,
+    swapRejectedCount: 18,
+    demandScore: 8, // 26 + 18 - 36 = 8
+    interestLevel: 'lower',
+    acceptanceStatus: 'lower_acceptance',
+    recommendation: 'Lowest interest meal today. Students frequently reject as alternative. Keep batch size minimal.',
+    isAvailable: false,
     isDemoSample: true,
   },
 ];
 
-/**
- * Aggregated category demand distribution
- */
 export const CATEGORY_DEMAND_DISTRIBUTION = [
-  { category: 'MEAL', label: 'Meals (North Indian / Chinese)', percentage: 46, orderVolume: 298 },
-  { category: 'SNACK', label: 'Snacks (Patties / Fries / Momos)', percentage: 24, orderVolume: 156 },
-  { category: 'BEVERAGE', label: 'Beverages (Tea / Coffee / Juices)', percentage: 23, orderVolume: 149 },
-  { category: 'DESSERT', label: 'Desserts & Ice Confections', percentage: 7, orderVolume: 45 },
+  { category: 'MEAL', label: 'Complete Meals', searchCount: 410, percentage: 50 },
+  { category: 'SNACK', label: 'Snacks & Quick Bites', searchCount: 180, percentage: 22 },
+  { category: 'BEVERAGE', label: 'Beverages & Juices', searchCount: 195, percentage: 24 },
+  { category: 'DESSERT', label: 'Desserts & Ice Cream', searchCount: 35, percentage: 4 },
 ];

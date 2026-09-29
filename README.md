@@ -7,26 +7,28 @@ EcoBite AI empowers Indian college students to make healthier, more affordable, 
 
 ---
 
-## 🖥️ Student + Canteen Owner Two-Screen Presentation Demo
+## 🖥️ Role Selection & Two-Screen Presentation Demo
 
 EcoBite AI supports an interactive **Two-Device Presentation Setup** for hackathon evaluations:
 
 | Device | Interface | Role & Capabilities |
 | :--- | :--- | :--- |
-| **Device 1 (Student)** | `Home` (`/`), `Search` (`/search`), `Scan` (`/scan`) | Food discovery, 3-tier image scan confidence, category-aware Smart Swaps (meals only swap with meals), verified MAIT prices, and weekly impact tracking. |
-| **Device 2 (Canteen Owner)** | `Canteen Intelligence` (`/owner`) | Real-time student demand heatmaps, conversion pairs (e.g. Chole Bhature → Paneer Sandwich), waste mitigation indicators (demo data), and live stock toggles without exposing student PII. |
-| **Audience Smartphone** | Point Camera at On-Screen **Demo QR** | Instantly launches the verified student experience on personal devices with an isolated demo token. |
+| **Root Portal** | `Landing` (`/`) | Clean role selection screen offering immediate entry to `[ STUDENT ]` or `[ CANTEEN OWNER ]`. |
+| **Device 1 (Student)** | `Student Portal` (`/student`), `Search` (`/search`), `Scan` (`/scan`) | Food discovery, 3D evaluation (Body, Wallet, Planet), category-aware & price-proximate Smart Swaps, explicit `[ SELECT ]` vs `[ REJECT ]` choices, and personal savings tracking. |
+| **Device 2 (Canteen Owner)** | `Canteen Intelligence` (`/owner`) | Real-time Student Demand Intelligence (`SEARCH`, `SMART_SWAP_ACCEPTED`, `SMART_SWAP_REJECTED`), live demand scoring, top searched dishes, menu optimization recommendations, and student counter QR generator without student PII. |
+| **Audience Smartphone** | Point Camera at On-Screen **Campus QR** | Instantly launches the verified student experience on personal devices with an isolated demo token (`MAIT-DELHI-01`). |
 
 ---
 
-## 🥗 Category-Aware Smart Swap Rules
+## 🥗 Category-Aware & Price-Proximate Smart Swap Rules
 
-To eliminate unrealistic recommendations (e.g. recommending a dessert or beverage for a hot meal), the engine enforces strict category boundaries:
+To eliminate unrealistic recommendations (e.g. recommending a dessert or beverage for a hot meal), the engine enforces strict category and price boundaries:
 
 - **`MEAL` → `MEAL`**: *Chole Bhature* or *Paneer Sandwich* will **never** suggest *Tea* or *Fruit Chill*. They recommend verified campus meals like *Rajma Chawal*, *Choley Chawal*, or *Veg Sandwich*.
 - **`SNACK` → `SNACK`**: *Aloo Patties* recommends healthy snack alternatives.
 - **`BEVERAGE` → `BEVERAGE`**: *Tea* or *Sugary Frappe* recommends *Fresh Mosambi Juice* or *Hot Coffee*.
 - **`DESSERT` → `DESSERT`**: *Fruit Chill* or *Brownie* recommends lighter dessert alternatives.
+- **Price Proximity Rule (`MAX_PRICE_DEVIATION = 0.10`)**: Candidates costing $>10\%$ above the original item are strictly disqualified. If none fits: *"No healthier verified campus option found within your price range."*
 - **Health-First Objective**: Health improvement (ΔH) is given primary priority (1000× dominant multiplier) so healthier options always supersede merely cheaper items.
 
 ---
