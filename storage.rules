@@ -1,0 +1,31 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isImageFile() {
+      return request.resource.contentType.matches('image/(jpeg|png|webp)') &&
+             request.resource.size <= 5 * 1024 * 1024; // 5 MB limit
+    }
+
+    // Temporary food scan photos uploaded by students for nutritional reasoning
+    match /userScans/{userId}/{allPaths=**} {
+      allow read, write: if isAuthenticated() &&
+                            request.auth.uid == userId &&
+                            isImageFile();
+    }
+
+    // Official canteen menu board photographs
+    // Readable by authenticated students, writeable only by campus admins
+    match /campusBoards/{campusId}/{canteenId}/{fileName} {
+      allow read: if isAuthenticated();
+      // Write access restricted to campus admin operations
+      allow write: if isAuthenticated() &&
+                      request.auth.token.role == 'campus_admin' &&
+                      isImageFile();
+    }
+  }
+}

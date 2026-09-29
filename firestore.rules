@@ -1,0 +1,145 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ==========================================
+    // SECURITY HELPER FUNCTIONS
+    // ==========================================
+
+    // Checks whether the incoming request is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Checks whether the authenticated user owns this specific record
+    function isUser(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Retrieves the authenticated user's profile document from Firestore
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Checks if the user has a verified status for the specified campusId
+    function hasVerifiedCampus(campusId) {
+      return isAuthenticated() &&
+             getUserData().campusVerified == true &&
+             getUserData().campusId == campusId;
+    }
+
+    // Checks if the user is an authorized campus administrator for this specific campusId
+    function isCampusAdmin(campusId) {
+      return isAuthenticated() &&
+             getUserData().role == 'campus_admin' &&
+             getUserData().campusId == campusId;
+    }
+
+    // ==========================================
+    // 1. CAMPUSES COLLECTION
+    // Public directory of recognized campuses. Client writes strictly forbidden.
+    // ==========================================
+    match /campuses/{campusId} {
+      allow read: if true;
+      allow write: if false; // Only Server/Admin SDK can onboard campuses
+    }
+
+    // ==========================================
+    // 2. CANTEENS COLLECTION
+    // Visible only to verified campus students or institution admins.
+    // ==========================================
+    match /canteens/{canteenId} {
+      allow read: if hasVerifiedCampus(resource.data.campusId) ||
+                     isCampusAdmin(resource.data.campusId);
+      allow create, update, delete: if isCampusAdmin(request.resource.data.campusId);
+    }
+
+    // ==========================================
+    // 3. MENU ITEMS COLLECTION
+    // Ground-truth prices and items are protected behind verified campus access.
+    // Students can NEVER edit prices or availability.
+    // Admin for MAIT cannot modify DTU menu items.
+    // ==========================================
+    match /menuItems/{menuItemId} {
+      allow read: if hasVerifiedCampus(resource.data.campusId) ||
+                     isCampusAdmin(resource.data.campusId);
+
+      allow create: if isCampusAdmin(request.resource.data.campusId) &&
+                       request.resource.data.price is number &&
+                       request.resource.data.price >= 0;
+
+      allow update: if isCampusAdmin(resource.data.campusId) &&
+                       request.resource.data.campusId == resource.data.campusId &&
+                       request.resource.data.price is number &&
+                       request.resource.data.price >= 0;
+
+      allow delete: if isCampusAdmin(resource.data.campusId);
+    }
+
+    // ==========================================
+    // 4. USERS COLLECTION
+    // Students cannot escalate role or grant themselves campus verification.
+    // ==========================================
+    match /users/{userId} {
+      allow read: if isUser(userId) ||
+                     (isAuthenticated() && getUserData().role == 'campus_admin');
+
+      // On signup, role must be 'student' and campusVerified must be false
+      allow create: if isUser(userId) &&
+                       request.resource.data.role == 'student' &&
+                       request.resource.data.campusVerified == false;
+
+      // On profile update, role and campusVerified cannot be self-modified
+      allow update: if isUser(userId) &&
+                       request.resource.data.role == resource.data.role &&
+                       request.resource.data.campusVerified == resource.data.campusVerified &&
+                       request.resource.data.campusId == resource.data.campusId;
+
+      allow delete: if false;
+    }
+
+    // ==========================================
+    // 5. CAMPUS ACCESS VERIFICATION
+    // Access records managed via server verification flow.
+    // ==========================================
+    match /campusAccess/{accessId} {
+      allow read: if isUser(resource.data.userId) ||
+                     isCampusAdmin(resource.data.campusId);
+      allow write: if false; // Writes restricted to backend verification endpoint
+    }
+
+    // ==========================================
+    // 6. FOOD PROFILES (Universal Public Intelligence)
+    // Universally readable in General Mode. Client modifications forbidden.
+    // ==========================================
+    match /foodProfiles/{foodId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ==========================================
+    // 7. SMART SWAPS COLLECTION
+    // Grounded in verified campus catalog.
+    // ==========================================
+    match /smartSwaps/{swapId} {
+      allow read: if hasVerifiedCampus(resource.data.campusId) ||
+                     isCampusAdmin(resource.data.campusId);
+      allow write: if isCampusAdmin(request.resource.data.campusId);
+    }
+
+    // ==========================================
+    // 8. IMPACT LOGS
+    // Users can only write impact logs for themselves and their verified campus.
+    // ==========================================
+    match /impactLogs/{logId} {
+      allow read: if isUser(resource.data.userId);
+
+      allow create: if isUser(request.resource.data.userId) &&
+                       (request.resource.data.campusId == 'general' || hasVerifiedCampus(request.resource.data.campusId)) &&
+                       request.resource.data.moneySaved is number &&
+                       request.resource.data.moneySaved >= 0;
+
+      allow update, delete: if false;
+    }
+  }
+}
