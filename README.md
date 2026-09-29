@@ -7,6 +7,15 @@ EcoBite AI empowers Indian college students to make healthier, more affordable, 
 
 ---
 
+## ?? Live Application & Repositories
+
+- **Live Production URL (GitHub Pages)**: [https://pra27-06.github.io/ecobite/](https://pra27-06.github.io/ecobite/)
+- **Firebase Hosting Endpoint**: [https://ecobite-ai.web.app/](https://ecobite-ai.web.app/)
+- **Source Code Repository**: [https://github.com/pra27-06/ecobite](https://github.com/pra27-06/ecobite)
+- **Evaluator & Judge Guide**: [`docs/LIVE_DEMO.md`](docs/LIVE_DEMO.md)
+
+---
+
 ## ?? Key Architectural Principles
 
 1. **One National Application, Dual Mode**:
@@ -68,9 +77,10 @@ For hackathon judges and evaluators, EcoBite AI is engineered to be experienced 
 ## ?? Tech Stack
 
 - **Frontend**: React 18 / 19, TypeScript, Vite, Tailwind CSS, Lucide React
-- **Routing**: React Router DOM (v7)
+- **Routing**: React Router DOM (v7) with `import.meta.env.BASE_URL` support
 - **Backend & Identity**: Firebase Authentication (Email/Password, Google OAuth, Anonymous Guest), Cloud Firestore, Firebase Storage
 - **AI Intelligence**: Google Gemini API multimodal integration + Offline Indian Food Knowledge Base fallback
+- **Deployment**: GitHub Actions (`.github/workflows/deploy.yml`) for GitHub Pages + Firebase Hosting configuration (`firebase.json`)
 - **Security**: Granular Cloud Firestore Security Rules, Role-Based Access Control (Student vs Campus Admin)
 - **Documentation**: 
   - [`docs/ECOBITE_CONTEXT.md`](docs/ECOBITE_CONTEXT.md) — Master product context and architecture
@@ -79,43 +89,11 @@ For hackathon judges and evaluators, EcoBite AI is engineered to be experienced 
   - [`docs/AI_ARCHITECTURE.md`](docs/AI_ARCHITECTURE.md) — Gemini multimodal architecture & system prompts
   - [`docs/SECURITY_AUDIT.md`](docs/SECURITY_AUDIT.md) — Complete security review, rules audit & threat model
   - [`docs/FINAL_DEMO_CHECKLIST.md`](docs/FINAL_DEMO_CHECKLIST.md) — Step-by-step verification checklist
+  - [`docs/LIVE_DEMO.md`](docs/LIVE_DEMO.md) — Comprehensive evaluator guide & live demo manual
 
 ---
 
-## ?? Core Features
-
-### 1. Multimodal AI Food Analysis (Body / Wallet / Planet)
-- **Multimodal Scanning**: Students can scan or take photos of food dishes, upload images, or search by dish name.
-- **3-Dimensional Evaluation**:
-  - **BODY (Health 0-10)**: Calories, macronutrients (protein, carbs, fat), dietary cautions (e.g. refined flour, high sodium).
-  - **WALLET (Affordability 0-10)**: Estimated typical price tier for Indian college budgets.
-  - **PLANET (Sustainability 0-10)**: Estimated carbon footprint (kg CO2e) and water impact.
-
-### 2. Campus-Aware Smart Swaps (Pilot: MAIT)
-- When a verified MAIT student analyzes a less healthy or expensive dish, EcoBite scans real MAIT canteen menus (Amul Shop, Food Mast, Juice Point, Nescafe).
-- Recommends healthier, high-value alternatives actually available at that exact campus (e.g. Paneer Sandwich, Rajma Chawal, Vegetable Poha).
-- Displays exact money saved and nutritional delta.
-
-### 3. Persistent Smart Swap & Impact Logging
-- Accepting a Smart Swap logs the event to Firestore (`/impactLogs`) and mirrors to isolated user local storage.
-- Records `userId`, `campusId`, `originalFood`, `selectedAlternative`, `originalPrice`, `alternativePrice`, `moneySaved`, and `estimatedImpact`.
-- Monetary savings are computed deterministically from verified prices.
-
-### 4. Real Weekly Impact Dashboard
-- Visualizes actual student metrics over time: total ? saved, meals swapped, estimated CO2 avoided.
-- Displays dynamic savings trajectory chart and a chronological log of verified swaps.
-- Strict empty-state guarantee when no swaps have been accepted yet.
-
-### 5. MAIT Canteen Admin Dashboard (`/admin`, `/admin/mait`)
-- Dedicated administrative interface for authorized campus cafeteria operators (`role: 'campus_admin'`, `campusId: 'MAIT'`).
-- Live stall overview across MAIT's 4 canteens: Amul Shop, Food Mast, Juice Point, Nescafe.
-- Instant item editing: update prices (e.g. Paneer Sandwich from ?30 to ?35), toggle in-stock / sold-out availability, add new cafeteria dishes.
-- **Instant Student-Facing Propagation**: Menu edits update immediately across student search, stall listings, and Smart Swap recommendations without any hardcoded fallbacks.
-- **403 Security Guard**: Access denied for unauthenticated or non-admin students. Includes an Evaluator Demo Switch for rapid role testing by hackathon judges.
-
----
-
-## ? Getting Started
+## ? Local Setup & Deployment
 
 ### Prerequisites
 - Node.js (v18 or higher recommended)
@@ -148,6 +126,41 @@ npm run build
 # Preview production build locally
 npm run preview
 ```
+
+### Deployment Configuration
+1. **GitHub Pages Deployment**:
+   - Automated via GitHub Actions workflow (`.github/workflows/deploy.yml`).
+   - Every push to `main` builds the application with `VITE_BASE_PATH=/ecobite/` and publishes to GitHub Pages.
+2. **Firebase Hosting Deployment**:
+   - `firebase.json` defines SPA routing rewrites:
+     ```bash
+     firebase login
+     firebase use your-project-id
+     firebase deploy --only hosting,firestore:rules,storage
+     ```
+
+---
+
+## ?? Environment Variables
+
+Copy `.env.example` to create your local `.env`:
+```bash
+cp .env.example .env
+```
+Environment variables accepted:
+```env
+# Firebase Client Configuration
+VITE_FIREBASE_API_KEY=your_firebase_api_key_here
+VITE_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project_id.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+VITE_FIREBASE_APP_ID=your_firebase_app_id
+
+# Optional: Google Gemini API Configuration
+VITE_GEMINI_API_KEY=your_gemini_api_key_here
+```
+> **Zero Crash Fallback**: If these environment variables are omitted, the application runs gracefully in local fallback mode with high-fidelity schemas and zero unhandled exceptions.
 
 ---
 
