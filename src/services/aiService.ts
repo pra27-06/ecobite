@@ -10,8 +10,9 @@
  * 3. Graceful Failure: Built-in timeout, schema validation, and offline Indian food knowledge base.
  */
 
-import type { AIFoodAnalysisResult, ServiceResponse, AIConfidenceLevel } from '../types';
+import type { AIFoodAnalysisResult, ServiceResponse, AIConfidenceLevel, FoodCategory } from '../types';
 import { MOCK_FOODS } from '../data/mockFoods';
+import { classifyFoodCategory } from '../utils/foodCategory';
 
 // Centralized System Prompt for Gemini
 const SYSTEM_INSTRUCTION = `
@@ -22,11 +23,14 @@ Your task is to analyze meals across 3 synchronized dimensions:
 3. PLANET (Sustainability / Ecological Footprint Score 0-10)
 
 Strict Rules:
-- Identify Indian regional cuisine dishes, campus cafeteria snacks, and drinks accurately.
+- Identify common Indian regional cuisine dishes, campus cafeteria meals, snacks, beverages, and desserts accurately.
+- Classify food into one of 4 canonical categories: "MEAL", "SNACK", "BEVERAGE", "DESSERT".
+- Never confuse categories: Distinguish meals (e.g. Pasta, Chowmein, Rajma Chawal, Chole Bhature, Sandwiches, Burgers) from snacks (Patties, Fries, Momos, Samosa), beverages (Tea, Coffee, Shakes, Juices), and desserts (Brownies, Fruit Chill, Ice Cream).
+- If multiple items are present or image quality is ambiguous, identify the primary dish and list 2-3 likely candidate foods in "possibleAlternatives".
+- If the food cannot be identified with high confidence, set "confidence" to "low", "isUncertain" to true, and do not invent a dish.
 - AI estimations are NOT laboratory tests. Clearly present numbers as estimates.
 - NEVER diagnose illness, state that the user has a disease, or offer clinical medical advice.
 - NEVER fabricate campus-specific data: do NOT mention college canteens, stall names, or institutional campus prices.
-- If the food cannot be identified with high confidence, set "confidence" to "low" and "isUncertain" to true.
 - Output MUST be valid JSON adhering strictly to the required schema.
 `;
 
@@ -35,9 +39,11 @@ Return valid JSON matching this exact structure:
 {
   "foodName": "Standard English/Hindi dish name",
   "hindiName": "Optional Devnagari / phonetic name",
+  "category": "MEAL" | "SNACK" | "BEVERAGE" | "DESSERT",
   "confidence": "high" | "medium" | "low",
   "confidenceScore": 0.85,
   "isUncertain": false,
+  "possibleAlternatives": ["Candidate 1", "Candidate 2"],
   "healthScore": 4.5,
   "affordabilityScore": 7.0,
   "sustainabilityScore": 6.0,
@@ -198,6 +204,70 @@ const INDIAN_FOOD_CATALOG: FoodKnowledgeEntry[] = [
       planet: 'Zero cooking energy required; minimal processing footprint from regionally sourced seasonal citrus.',
     },
     cautions: ['Fibers partially removed during extraction', 'Request without added table sugar'],
+  },
+  {
+    names: ['pasta', 'red sauce pasta', 'white sauce pasta', 'penne pasta', 'penne', 'macaroni'],
+    displayName: 'Pasta',
+    hindiName: 'पास्ता',
+    category: 'Meals',
+    healthScore: 6.2,
+    affordabilityScore: 6.8,
+    sustainabilityScore: 6.5,
+    nutrition: { calories: 390, protein: 11, carbs: 62, fat: 12 },
+    explanation: {
+      body: 'Penne pasta tossed in tomato-herb or mixed creamy sauce; provides sustained complex carbohydrate fuel for classes.',
+      wallet: 'Standard campus cafe dish priced at ₹120 in the MAIT Food Mast court.',
+      planet: 'Durum wheat based with moderate processing and packaging lifecycle emissions.',
+    },
+    cautions: ['Refined durum wheat base', 'Check cream/cheese sauce quantity'],
+  },
+  {
+    names: ['fruit chill', 'amul fruit chill'],
+    displayName: 'Fruit Chill',
+    hindiName: 'फ्रूट चिल',
+    category: 'Desserts',
+    healthScore: 4.2,
+    affordabilityScore: 9.0,
+    sustainabilityScore: 7.0,
+    nutrition: { calories: 110, protein: 0.5, carbs: 26, fat: 0.1 },
+    explanation: {
+      body: 'Chilled fruit-flavored frozen confectionery; sweet and cooling on hot days but rich in simple sugars.',
+      wallet: 'Economical pocket treat priced at ₹20 at the Amul Shop counter.',
+      planet: 'Packaged cold-chain confectionery with moderate refrigerated storage footprint.',
+    },
+    cautions: ['High simple sucrose content', 'Dessert confectionery, not a meal substitute'],
+  },
+  {
+    names: ['tea', 'chai', 'kulhad tea', 'spl. kulhad tea', 'hot tea'],
+    displayName: 'Tea (Chai)',
+    hindiName: 'चाय',
+    category: 'Beverages',
+    healthScore: 5.5,
+    affordabilityScore: 9.5,
+    sustainabilityScore: 7.8,
+    nutrition: { calories: 95, protein: 2.5, carbs: 12, fat: 3.5 },
+    explanation: {
+      body: 'Freshly brewed milk tea infused with cardamom and ginger; provides mild caffeine alertness.',
+      wallet: 'Quintessential campus drink priced at ₹15–₹25 across all MAIT counters.',
+      planet: 'Regionally cultivated loose tea leaves incur minimal lifecycle carbon footprint.',
+    },
+    cautions: ['Added table sugar', 'Beverage refreshment, not a meal replacement'],
+  },
+  {
+    names: ['hot coffee', 'coffee', 'nescafe coffee'],
+    displayName: 'Hot Coffee',
+    hindiName: 'कॉफ़ी',
+    category: 'Beverages',
+    healthScore: 5.8,
+    affordabilityScore: 9.0,
+    sustainabilityScore: 7.5,
+    nutrition: { calories: 85, protein: 2.8, carbs: 10, fat: 3.2 },
+    explanation: {
+      body: 'Steamed milk coffee offering caffeine focus for morning lectures and late study sessions.',
+      wallet: 'Economical hot beverage priced at ₹20–₹25 at Nescafé / Amul counters.',
+      planet: 'Moderate dairy and coffee bean cultivation resource demand.',
+    },
+    cautions: ['Watch added table sugar'],
   },
   {
     names: ['dal tadka', 'dal fry', 'dal roti'],
@@ -413,12 +483,24 @@ export const aiService = {
       ? parsed.cautions.map(String)
       : ['AI-generated nutritional estimate. Values may vary by canteen preparation.'];
 
+    const foodName = String(parsed.foodName || fallbackName);
+    const category: FoodCategory = 
+      (typeof parsed.category === 'string' && ['MEAL', 'SNACK', 'BEVERAGE', 'DESSERT'].includes(parsed.category.toUpperCase())
+        ? (parsed.category.toUpperCase() as FoodCategory)
+        : classifyFoodCategory(foodName, typeof parsed.category === 'string' ? parsed.category : undefined));
+
+    const possibleAlternatives = Array.isArray(parsed.possibleAlternatives)
+      ? parsed.possibleAlternatives.map(String).slice(0, 3)
+      : undefined;
+
     return {
-      foodName: String(parsed.foodName || fallbackName),
+      foodName,
       hindiName: parsed.hindiName ? String(parsed.hindiName) : undefined,
+      category,
       confidence,
       confidenceScore,
       isUncertain,
+      possibleAlternatives,
       healthScore: Math.min(10, Math.max(0, Number(parsed.healthScore) || 5.0)),
       affordabilityScore: Math.min(10, Math.max(0, Number(parsed.affordabilityScore) || 7.0)),
       sustainabilityScore: Math.min(10, Math.max(0, Number(parsed.sustainabilityScore) || 6.0)),
@@ -453,6 +535,7 @@ export const aiService = {
       return {
         foodName: matchedMock.name,
         hindiName: matchedMock.hindiName,
+        category: classifyFoodCategory(matchedMock.name, matchedMock.category),
         confidence: 'high',
         confidenceScore: 0.95,
         isUncertain: false,
@@ -490,6 +573,7 @@ export const aiService = {
       return {
         foodName: matchedCatalog.displayName,
         hindiName: matchedCatalog.hindiName,
+        category: classifyFoodCategory(matchedCatalog.displayName, matchedCatalog.category),
         confidence: 'high',
         confidenceScore: 0.92,
         isUncertain: false,
@@ -506,7 +590,7 @@ export const aiService = {
       };
     }
 
-    // Unknown or low-confidence food query
+    // Unknown or moderate-confidence food query
     const looksLikeFood =
       q.includes('dosa') ||
       q.includes('roll') ||
@@ -516,16 +600,20 @@ export const aiService = {
       q.includes('shake') ||
       q.includes('coffee') ||
       q.includes('tea') ||
-      q.includes('curry');
+      q.includes('curry') ||
+      q.includes('pasta') ||
+      q.includes('noodle');
 
     if (looksLikeFood) {
       // Formulate a plausible moderate estimate
       const capitalized = query.charAt(0).toUpperCase() + query.slice(1);
       return {
         foodName: capitalized,
+        category: classifyFoodCategory(capitalized),
         confidence: 'medium',
-        confidenceScore: 0.68,
+        confidenceScore: 0.72,
         isUncertain: false,
+        possibleAlternatives: ['Pasta', 'Veg Chowmein', 'Paneer Sandwich'],
         healthScore: 6.0,
         affordabilityScore: 7.5,
         sustainabilityScore: 7.0,
@@ -546,9 +634,11 @@ export const aiService = {
     // Non-food or completely ambiguous input -> Return low confidence
     return {
       foodName: query.trim() || 'Unidentified Item',
+      category: 'MEAL',
       confidence: 'low',
       confidenceScore: 0.35,
       isUncertain: true,
+      possibleAlternatives: ['Pasta', 'Chole Bhature', 'Paneer Sandwich'],
       healthScore: 5.0,
       affordabilityScore: 5.0,
       sustainabilityScore: 5.0,

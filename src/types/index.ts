@@ -61,13 +61,17 @@ export interface CanteenDoc {
   updatedAt: string;
 }
 
+// Core Food Categories
+export type FoodCategory = 'MEAL' | 'SNACK' | 'BEVERAGE' | 'DESSERT';
+
 // Menu Items (Firestore: menuItems/{menuItemId})
 export interface MenuItemDoc {
   menuItemId: string;
   campusId: string; // Campus isolation key
   canteenId: string; // Canteen identifier
   name: string; // e.g., 'Paneer Sandwich'
-  category: string; // 'breakfast' | 'meals' | 'snacks' | 'beverages' | 'dessert'
+  category: string; // raw category, e.g. 'sandwiches', 'indian-meals'
+  foodCategory?: FoodCategory; // Normalized canonical category
   price: number; // Stored in INR (₹)
   available: boolean;
   description: string;
@@ -142,9 +146,11 @@ export type AIConfidenceLevel = 'high' | 'medium' | 'low';
 export interface AIFoodAnalysisResult {
   foodName: string;
   hindiName?: string;
+  category?: FoodCategory;
   confidence: AIConfidenceLevel;
   confidenceScore: number; // 0.0 to 1.0
   isUncertain: boolean;
+  possibleAlternatives?: string[]; // Candidate foods if uncertain or ambiguous
   healthScore: number; // 0.0 - 10.0 (Body)
   affordabilityScore: number; // 0.0 - 10.0 (Wallet)
   sustainabilityScore: number; // 0.0 - 10.0 (Planet)
@@ -173,6 +179,7 @@ export interface SmartSwapRecommendation {
   canteenId?: string;
   canteenName?: string;
   canteenLocation?: string;
+  foodCategory?: FoodCategory;
   price: number;
   healthScore: number;
   sustainabilityScore: number;
@@ -196,10 +203,42 @@ export interface SmartSwapResult {
   originalFood: {
     name: string;
     price?: number;
+    foodCategory?: FoodCategory;
     healthScore: number;
     sustainabilityScore: number;
     source: string;
   };
   recommendedSwap?: SmartSwapRecommendation;
   noSwapReason?: string;
+}
+
+// Canteen Owner Operational & Demand Types
+export interface CanteenDemandItem {
+  itemId: string;
+  name: string;
+  category: FoodCategory;
+  canteenId: string;
+  canteenName: string;
+  price: number;
+  searchInterest: number;
+  swapAcceptedCount: number;
+  dailyPreparedQty: number;
+  dailySoldQty: number;
+  estimatedExcessQty: number;
+  wasteRisk: 'low' | 'medium' | 'high';
+  recommendation: string;
+  isAvailable: boolean;
+  isDemoSample: true;
+}
+
+export interface CanteenOperationalOverview {
+  campusId: string;
+  date: string;
+  totalOrders: number;
+  totalRevenueEstimate: number;
+  mostDemandedItem: string;
+  lowestDemandedItem: string;
+  totalExcessMeals: number;
+  overallWastePercentage: number;
+  isDemoSample: true;
 }

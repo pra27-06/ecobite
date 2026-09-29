@@ -12,6 +12,7 @@ import { SmartSwapPage } from './pages/SmartSwapPage';
 import { WeeklyImpactPage } from './pages/WeeklyImpactPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
+import { CanteenOwnerDashboardPage } from './pages/CanteenOwnerDashboardPage';
 import { ContextPage } from './pages/ContextPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
@@ -34,6 +35,8 @@ export const App: React.FC = () => {
               <Route path="profile" element={<ProfilePage />} />
               <Route path="admin" element={<AdminDashboardPage />} />
               <Route path="admin/mait" element={<AdminDashboardPage />} />
+              <Route path="owner" element={<CanteenOwnerDashboardPage />} />
+              <Route path="canteen-owner" element={<CanteenOwnerDashboardPage />} />
               <Route path="context" element={<ContextPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>

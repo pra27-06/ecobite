@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { Leaf, Search, Camera, TrendingUp, User, BookOpen, ShieldCheck } from 'lucide-react';
+import { Leaf, Search, Camera, TrendingUp, User, BookOpen, ShieldCheck, Store, Sparkles } from 'lucide-react';
 import { CampusStatus } from './CampusStatus';
+import { DemoAccessModal } from './DemoAccessModal';
 import { useAuth } from '../hooks/useAuth';
 
 export const Navbar: React.FC = () => {
   const { userDoc } = useAuth();
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -112,6 +114,21 @@ export const Navbar: React.FC = () => {
               <span>Docs</span>
             </NavLink>
 
+            <NavLink
+              to="/owner"
+              className={({ isActive }) =>
+                `px-3 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+                  isActive
+                    ? 'bg-slate-900 text-white'
+                    : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+                }`
+              }
+              title="Canteen Owner Intelligence Dashboard"
+            >
+              <Store className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Canteen Owner</span>
+            </NavLink>
+
             {userDoc?.role === 'campus_admin' && (
               <NavLink
                 to="/admin"
@@ -129,12 +146,26 @@ export const Navbar: React.FC = () => {
             )}
           </nav>
 
-          {/* Right Status Badge */}
+          {/* Right Status & Demo Badge */}
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsDemoModalOpen(true)}
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-200 transition-colors shadow-2xs"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Judge Demo</span>
+            </button>
             <CampusStatus compact />
           </div>
         </div>
       </div>
+
+      {/* Interactive Demo QR Modal */}
+      <DemoAccessModal
+        isOpen={isDemoModalOpen}
+        onClose={() => setIsDemoModalOpen(false)}
+      />
     </header>
   );
 };

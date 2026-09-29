@@ -3,35 +3,40 @@
  * 
  * Recommends actionable, authentic alternatives available at the student's campus canteen.
  * 
- * Architectural Guarantees:
+ * Strict Architectural Guarantees:
  * 1. ZERO Price Hallucination: Campus prices, canteen names, and stall availability
  *    are strictly retrieved from Cloud Firestore records.
- * 2. Campus Access Boundary: If the user is unverified, NO campus-specific prices or
- *    stall names are displayed. Only general national benchmarks are shown.
- * 3. Transparent Ranking Formula: Bounded, multi-criteria decision scoring.
- * 4. Deterministic No-Match Handling: If no verified dish meets criteria, clearly states
- *    "No verified Smart Swap is available right now" instead of fabricating recommendations.
+ * 2. Category Compatibility: LIKE-FOR-LIKE SWAPS ONLY.
+ *    - MEAL -> MEAL (Never Beverage, Dessert, or Snack)
+ *    - SNACK -> SNACK
+ *    - BEVERAGE -> BEVERAGE
+ *    - DESSERT -> DESSERT
+ * 3. Health-First Objective: Health improvement is the primary, dominant ranking criterion.
+ *    Cheaper or more sustainable items cannot beat a substantially healthier alternative.
+ * 4. Post-Selection Validation Guardrail: Enforces sanity checks; cross-category recommendations
+ *    are strictly rejected.
+ * 5. Deterministic No-Match: If no valid healthier alternative in the same category exists,
+ *    returns hasSwap: false instead of fabricating ill-fitting alternatives.
  */
 
 import { menuService } from './menuService';
 import { campusService } from './campusService';
+import { classifyFoodCategory } from '../utils/foodCategory';
 import type { 
   AIFoodAnalysisResult, 
   SmartSwapResult, 
   SmartSwapRecommendation, 
   MenuItemDoc,
-  ServiceResponse 
+  ServiceResponse,
+  FoodCategory 
 } from '../types';
 
-// Transparent multi-criteria decision weights
+// Transparent multi-criteria decision configuration
 export const SWAP_CONFIG = {
-  weights: {
-    healthImprovement: 0.40,
-    priceSavings: 0.35,
-    sustainability: 0.15,
-    availabilityBonus: 0.10,
-  },
-  minHealthImprovementThreshold: 0.5, // Swap must be noticeably healthier or provide major savings
+  // Health is the dominant tier: differences in nutrition overwhelm pure price differences
+  healthDominanceMultiplier: 1000,
+  maxSavingsBonusPoints: 50,
+  minHealthThresholdForUnhealthyOriginal: 0.2, // For foods with health < 7.0, must improve health
 };
 
 export const swapService = {
@@ -47,11 +52,16 @@ export const swapService = {
     const origHealth = aiAnalysis.healthScore;
     const origSustainability = aiAnalysis.sustainabilityScore;
 
+    // 1. Determine canonical category of the original food
+    const origCategory: FoodCategory = 
+      aiAnalysis.category || 
+      classifyFoodCategory(originalFoodName);
+
     // ==========================================
     // CASE A: UNVERIFIED CAMPUS (GENERAL PUBLIC MODE)
     // ==========================================
     if (!isCampusVerified) {
-      const generalSwap = this.getGeneralSwapBenchmark(originalFoodName, aiAnalysis);
+      const generalSwap = this.getGeneralSwapBenchmark(originalFoodName, aiAnalysis, origCategory);
       return {
         success: true,
         data: {
@@ -61,6 +71,7 @@ export const swapService = {
           originalFood: {
             name: aiAnalysis.foodName,
             price: undefined, // Strictly hidden in unverified mode
+            foodCategory: origCategory,
             healthScore: origHealth,
             sustainabilityScore: origSustainability,
             source: 'General Public Estimate',
@@ -85,6 +96,7 @@ export const swapService = {
             hasSwap: false,
             originalFood: {
               name: aiAnalysis.foodName,
+              foodCategory: origCategory,
               healthScore: origHealth,
               sustainabilityScore: origSustainability,
               source: `${campusId.toUpperCase()} Campus`,
@@ -103,12 +115,13 @@ export const swapService = {
         });
       }
 
+      // Only consider verified and available (in-stock) items
       const availableItems = menuResp.data.filter((i) => i.available && i.verified);
 
       // 3. Find if original food exists on campus menu to determine authentic current price
-      const normOrigName = originalFoodName.toLowerCase();
+      const normOrigName = originalFoodName.toLowerCase().trim();
       const matchedOrigMenuItem = availableItems.find((item) => {
-        const itemNorm = item.name.toLowerCase();
+        const itemNorm = item.name.toLowerCase().trim();
         return (
           itemNorm === normOrigName ||
           itemNorm.includes(normOrigName) ||
@@ -116,28 +129,59 @@ export const swapService = {
         );
       });
 
-      // Authentic price from Firestore if available, otherwise baseline estimate
+      // Authentic price from Firestore if available, otherwise benchmark estimate
       const originalPrice = matchedOrigMenuItem ? matchedOrigMenuItem.price : 60;
 
-      // 4. Rank campus candidates using transparent scoring
-      const candidates = availableItems.filter((candidate) => {
+      // 4. Filter candidates: STRICT CATEGORY MATCH + NOT SAME DISH
+      const eligibleCandidates = availableItems.filter((candidate) => {
         // Exclude the exact same item
         if (matchedOrigMenuItem && candidate.menuItemId === matchedOrigMenuItem.menuItemId) {
           return false;
         }
-        if (candidate.name.toLowerCase() === normOrigName) {
+        if (candidate.name.toLowerCase().trim() === normOrigName) {
           return false;
         }
+
+        // STRICT LIKE-FOR-LIKE CATEGORY FILTER:
+        // MEAL -> MEAL
+        // SNACK -> SNACK
+        // BEVERAGE -> BEVERAGE
+        // DESSERT -> DESSERT
+        const candidateCategory = classifyFoodCategory(candidate.name, candidate.category);
+        if (candidateCategory !== origCategory) {
+          return false; // REJECT CROSS-CATEGORY SWAP
+        }
+
         return true;
       });
 
-      // Score each candidate
+      if (eligibleCandidates.length === 0) {
+        return {
+          success: true,
+          data: {
+            success: true,
+            isCampusVerified: true,
+            hasSwap: false,
+            originalFood: {
+              name: aiAnalysis.foodName,
+              price: matchedOrigMenuItem?.price,
+              foodCategory: origCategory,
+              healthScore: origHealth,
+              sustainabilityScore: origSustainability,
+              source: matchedOrigMenuItem ? `MAIT (${matchedOrigMenuItem.canteenId})` : 'MAIT Campus Baseline',
+            },
+            noSwapReason: `No verified ${origCategory} alternatives are currently in stock at campus counters.`,
+          },
+        };
+      }
+
+      // 5. Score eligible candidates with HEALTH-FIRST Priority
       let bestCandidate: MenuItemDoc | null = null;
       let highestScore = -Infinity;
       let bestReasons: string[] = [];
       let bestMoneySaved = 0;
 
-      for (const item of candidates) {
+      for (const item of eligibleCandidates) {
         const estimatedCandidateHealth = this.estimateItemHealthScore(item);
         const estimatedCandidateSustainability = this.estimateItemSustainabilityScore(item);
 
@@ -145,30 +189,39 @@ export const swapService = {
         const moneySaved = originalPrice - item.price;
         const sustDelta = estimatedCandidateSustainability - origSustainability;
 
-        // Skip candidate if it is both significantly unhealthier AND more expensive
-        if (healthDelta < -1.0 && moneySaved < 0) {
+        // HEALTH FILTER CRITERIA:
+        // - If original food is relatively unhealthy (< 7.0), alternative MUST improve health
+        if (origHealth < 7.0 && healthDelta < SWAP_CONFIG.minHealthThresholdForUnhealthyOriginal) {
+          continue;
+        }
+        // - If original food is already healthy (>= 7.0), alternative must maintain high health (>= 7.0)
+        //   or at least be within 0.5 of original health while offering major budget/preparation value
+        if (origHealth >= 7.0 && estimatedCandidateHealth < 6.8) {
           continue;
         }
 
-        // Normalized criteria
-        // Health score delta: 0 to 10 scale normalized by / 5
-        const normHealth = Math.max(-1, Math.min(2, healthDelta / 3));
-        // Savings normalized: ₹50 savings gives 1.0
-        const normSavings = Math.max(-1, Math.min(2, moneySaved / 30));
-        // Sustainability normalized
-        const normSust = Math.max(-1, Math.min(2, sustDelta / 3));
+        // COMPOSITE SCORING:
+        // Health improvement is the primary objective (dominant multiplier: 1000).
+        // Secondary objectives (money saved and carbon footprint) act as tie-breakers.
+        const savingsScore = moneySaved > 0 ? Math.min(moneySaved, 30) * 1.5 : (moneySaved === 0 ? 5 : -15);
+        const sustScore = Math.max(-5, Math.min(10, sustDelta * 2));
 
-        const compositeScore =
-          normHealth * SWAP_CONFIG.weights.healthImprovement +
-          normSavings * SWAP_CONFIG.weights.priceSavings +
-          normSust * SWAP_CONFIG.weights.sustainability +
-          (item.available ? 1 : 0) * SWAP_CONFIG.weights.availabilityBonus;
+        const compositeScore = (healthDelta * SWAP_CONFIG.healthDominanceMultiplier) + savingsScore + sustScore;
 
-        if (compositeScore > highestScore && (healthDelta >= 0.5 || moneySaved >= 15)) {
+        if (compositeScore > highestScore) {
           highestScore = compositeScore;
           bestCandidate = item;
           bestMoneySaved = moneySaved;
           bestReasons = this.generateSwapReasons(item, aiAnalysis, moneySaved, healthDelta);
+        }
+      }
+
+      // POST-SELECTION SANITY GUARDRAIL
+      if (bestCandidate) {
+        const validatedCat = classifyFoodCategory(bestCandidate.name, bestCandidate.category);
+        if (validatedCat !== origCategory) {
+          console.error(`[Guardrail Rejection] Attempted cross-category swap from ${origCategory} to ${validatedCat}`);
+          bestCandidate = null;
         }
       }
 
@@ -183,16 +236,17 @@ export const swapService = {
             originalFood: {
               name: aiAnalysis.foodName,
               price: matchedOrigMenuItem?.price,
+              foodCategory: origCategory,
               healthScore: origHealth,
               sustainabilityScore: origSustainability,
               source: matchedOrigMenuItem ? `MAIT (${matchedOrigMenuItem.canteenId})` : 'MAIT Campus Baseline',
             },
-            noSwapReason: 'No verified Smart Swap is available right now that improves your health or saves money.',
+            noSwapReason: `No verified ${origCategory} alternative currently available provides a significant health improvement.`,
           },
         };
       }
 
-      // 5. Build authentic verified swap response
+      // 6. Build authentic verified swap response
       const canteenInfo = canteensMap.get(bestCandidate.canteenId) || {
         name: bestCandidate.canteenId,
         location: 'Campus Dining Area',
@@ -207,6 +261,7 @@ export const swapService = {
         canteenId: bestCandidate.canteenId,
         canteenName: canteenInfo.name,
         canteenLocation: canteenInfo.location,
+        foodCategory: origCategory,
         price: bestCandidate.price, // Ground-truth price from Firestore
         healthScore: recommendedHealth,
         sustainabilityScore: recommendedSust,
@@ -226,6 +281,7 @@ export const swapService = {
           originalFood: {
             name: aiAnalysis.foodName,
             price: originalPrice,
+            foodCategory: origCategory,
             healthScore: origHealth,
             sustainabilityScore: origSustainability,
             source: matchedOrigMenuItem ? `${canteenInfo.name}` : 'MAIT Campus Baseline',
@@ -240,63 +296,127 @@ export const swapService = {
   },
 
   /**
-   * Generate general benchmark swap when campus is unverified
+   * Generate general benchmark swap when campus is unverified (strictly respecting category)
    */
   getGeneralSwapBenchmark(
     foodName: string,
-    _aiAnalysis: AIFoodAnalysisResult
+    _aiAnalysis: AIFoodAnalysisResult,
+    category: FoodCategory
   ): SmartSwapRecommendation {
     const q = foodName.toLowerCase();
 
-    if (q.includes('bhature') || q.includes('samosa') || q.includes('patie') || q.includes('patties')) {
-      return {
-        name: 'Paneer Sandwich or Sprouted Moong Chaat',
-        price: 35, // general benchmark
-        healthScore: 7.8,
-        sustainabilityScore: 7.2,
-        moneySaved: 25,
-        isAvailable: true,
-        isCampusVerified: false,
-        whyReasons: [
-          'Substantially higher lean protein for sustained study energy',
-          'Avoids reused deep-frying cooking oils',
-          'Estimated student pocket savings of ~₹25',
-        ],
-        source: 'general_benchmark',
-      };
-    }
+    // 1. BEVERAGE BENCHMARK
+    if (category === 'BEVERAGE') {
+      if (q.includes('coffee') || q.includes('cold coffee') || q.includes('shake')) {
+        return {
+          name: 'Fresh Coconut Water or Unsweetened Filter Coffee',
+          price: 30,
+          foodCategory: 'BEVERAGE',
+          healthScore: 8.2,
+          sustainabilityScore: 8.5,
+          moneySaved: 15,
+          isAvailable: true,
+          isCampusVerified: false,
+          whyReasons: [
+            'Zero added refined syrups, artificial dairy thickeners, or hidden sugars',
+            'Rich in essential electrolytes (potassium, magnesium) for cognitive alertness',
+            'Saves approximately ₹15 on student cafe spending',
+          ],
+          source: 'general_benchmark',
+        };
+      }
 
-    if (q.includes('maggi') || q.includes('chowmein') || q.includes('noodle')) {
       return {
-        name: 'Vegetable Upma or Fresh Fruit Bowl',
-        price: 30,
-        healthScore: 7.5,
-        sustainabilityScore: 8.0,
+        name: 'Fresh Mint Masala Chaas (Spiced Buttermilk)',
+        price: 20,
+        foodCategory: 'BEVERAGE',
+        healthScore: 8.5,
+        sustainabilityScore: 8.2,
         moneySaved: 10,
         isAvailable: true,
         isCampusVerified: false,
         whyReasons: [
-          'Lower sodium and unrefined complex carbohydrates',
-          'Rich in dietary fiber and essential micronutrients',
-          'Zero ultra-processed artificial seasonings',
+          'Natural probiotics aid digestion during long study hours',
+          'Significantly lower sugar load than canned sodas or sweetened chai',
+          'Budget-friendly hydration under ₹20',
         ],
         source: 'general_benchmark',
       };
     }
 
-    // Default general swap
+    // 2. DESSERT BENCHMARK
+    if (category === 'DESSERT') {
+      return {
+        name: 'Fresh Seasonal Fruit Chaat with Honey & Lime',
+        price: 35,
+        foodCategory: 'DESSERT',
+        healthScore: 8.4,
+        sustainabilityScore: 8.8,
+        moneySaved: 15,
+        isAvailable: true,
+        isCampusVerified: false,
+        whyReasons: [
+          'Naturally sweet fructose paired with active dietary fiber',
+          'Eliminates refined white sugars, artificial food colorings, and saturated bakery fats',
+          'Sustainable raw fruit preparation with zero kitchen cooking emissions',
+        ],
+        source: 'general_benchmark',
+      };
+    }
+
+    // 3. SNACK BENCHMARK
+    if (category === 'SNACK') {
+      return {
+        name: 'Sprouted Moong & Roasted Peanut Chaat',
+        price: 25,
+        foodCategory: 'SNACK',
+        healthScore: 8.6,
+        sustainabilityScore: 8.5,
+        moneySaved: 15,
+        isAvailable: true,
+        isCampusVerified: false,
+        whyReasons: [
+          'Rich in active bio-available plant protein (9g) and high dietary fiber',
+          '100% oil-free preparation avoiding reused commercial frying vats',
+          'Sustained satiety without post-snack energy crashes',
+        ],
+        source: 'general_benchmark',
+      };
+    }
+
+    // 4. MEAL BENCHMARK (Default for meals)
+    if (q.includes('bhature') || q.includes('deep fried')) {
+      return {
+        name: 'Rajma Chawal with Mixed Salad',
+        price: 60,
+        foodCategory: 'MEAL',
+        healthScore: 8.2,
+        sustainabilityScore: 8.4,
+        moneySaved: 15,
+        isAvailable: true,
+        isCampusVerified: false,
+        whyReasons: [
+          'High complete protein pairing with zero deep frying or trans fats',
+          'Slow-release complex carbohydrates prevent post-meal afternoon lethargy',
+          'Saves ₹10–₹15 compared to commercial fried combos',
+        ],
+        source: 'general_benchmark',
+      };
+    }
+
     return {
-      name: 'Dal Tadka with Whole Wheat Roti',
-      price: 45,
-      healthScore: 8.2,
-      sustainabilityScore: 8.5,
-      moneySaved: 15,
+      name: 'Paneer Whole Wheat Wrap with Mint Chutney',
+      price: 50,
+      foodCategory: 'MEAL',
+      healthScore: 7.9,
+      sustainabilityScore: 7.5,
+      moneySaved: 20,
       isAvailable: true,
       isCampusVerified: false,
       whyReasons: [
-        'Balanced macronutrient distribution with complete plant protein',
-        'Lower glycemic load prevents post-lunch sleepiness',
-        'Minimal carbon and water footprint compared to fast food',
+        'Lean cottage cheese provides 14g satiety protein to sustain afternoon lectures',
+        'Whole grain flatbread delivers sustained glycemic control',
+        'Substantially lower saturated fat than street fast food',
       ],
       source: 'general_benchmark',
     };
@@ -306,20 +426,36 @@ export const swapService = {
    * Helper to estimate health score for a Firestore menu item
    */
   estimateItemHealthScore(item: MenuItemDoc): number {
-    const n = item.name.toLowerCase();
-    const cat = item.category.toLowerCase();
+    const n = item.name.toLowerCase().trim();
+    const cat = item.category.toLowerCase().trim();
 
-    if (n.includes('juice') || n.includes('healthy') || n.includes('fruit')) return 7.8;
-    if (n.includes('paneer sandwich') || n.includes('paneer kulcha')) return 7.5;
-    if (n.includes('rajma chawal') || n.includes('choley chawal')) return 7.6;
+    // High Health (7.5 - 8.5)
+    if (n.includes('juice') && !n.includes('shake')) return 8.0;
+    if (n.includes('rajma chawal') || n.includes('choley chawal')) return 7.8;
     if (n.includes('dal') || n.includes('khichdi')) return 8.4;
+    if (n.includes('paneer sandwich')) return 7.8;
+    if (n.includes('veg sandwich')) return 7.4;
+    if (n.includes('paneer kulcha')) return 7.2;
     if (n.includes('soup')) return 7.2;
+
+    // Moderate Health (5.5 - 7.0)
+    if (n.includes('pasta')) return 6.2;
+    if (n.includes('hot coffee') || n.includes('coffee')) return 5.8;
+    if (n.includes('tea') || n.includes('chai')) return 5.5;
+    if (n.includes('chowmein')) return 5.2;
+    if (n.includes('burger')) return 5.0;
+
+    // Lower Health (3.0 - 4.5)
+    if (n.includes('maggi') || n.includes('maggie')) return 4.0;
     if (n.includes('bhature')) return 3.5;
     if (n.includes('samosa') || n.includes('patie') || n.includes('patties')) return 3.6;
     if (n.includes('fries') || n.includes('potato')) return 3.8;
-    if (n.includes('chowmein') || n.includes('burger')) return 4.8;
-    if (n.includes('maggi')) return 4.0;
-    if (cat === 'meals') return 6.8;
+    if (n.includes('momos')) return 4.5;
+    if (n.includes('fruit chill')) return 4.2;
+    if (n.includes('brownie')) return 3.8;
+    if (n.includes('shake')) return 4.8;
+
+    if (cat === 'meals' || cat === 'indian-meals') return 7.2;
     return 6.0;
   },
 
@@ -327,7 +463,7 @@ export const swapService = {
    * Helper to estimate sustainability score for a Firestore menu item
    */
   estimateItemSustainabilityScore(item: MenuItemDoc): number {
-    const n = item.name.toLowerCase();
+    const n = item.name.toLowerCase().trim();
     if (n.includes('juice') || n.includes('fruit')) return 8.5;
     if (n.includes('rajma') || n.includes('choley') || n.includes('dal')) return 8.2;
     if (n.includes('soup') || n.includes('tea')) return 7.5;

@@ -7,6 +7,30 @@ EcoBite AI empowers Indian college students to make healthier, more affordable, 
 
 ---
 
+## üñ•Ô∏è Student + Canteen Owner Two-Screen Presentation Demo
+
+EcoBite AI supports an interactive **Two-Device Presentation Setup** for hackathon evaluations:
+
+| Device | Interface | Role & Capabilities |
+| :--- | :--- | :--- |
+| **Device 1 (Student)** | `Home` (`/`), `Search` (`/search`), `Scan` (`/scan`) | Food discovery, 3-tier image scan confidence, category-aware Smart Swaps (meals only swap with meals), verified MAIT prices, and weekly impact tracking. |
+| **Device 2 (Canteen Owner)** | `Canteen Intelligence` (`/owner`) | Real-time student demand heatmaps, conversion pairs (e.g. Chole Bhature ‚Üí Paneer Sandwich), waste mitigation indicators (demo data), and live stock toggles without exposing student PII. |
+| **Audience Smartphone** | Point Camera at On-Screen **Demo QR** | Instantly launches the verified student experience on personal devices with an isolated demo token. |
+
+---
+
+## ü•ó Category-Aware Smart Swap Rules
+
+To eliminate unrealistic recommendations (e.g. recommending a dessert or beverage for a hot meal), the engine enforces strict category boundaries:
+
+- **`MEAL` ‚Üí `MEAL`**: *Chole Bhature* or *Paneer Sandwich* will **never** suggest *Tea* or *Fruit Chill*. They recommend verified campus meals like *Rajma Chawal*, *Choley Chawal*, or *Veg Sandwich*.
+- **`SNACK` ‚Üí `SNACK`**: *Aloo Patties* recommends healthy snack alternatives.
+- **`BEVERAGE` ‚Üí `BEVERAGE`**: *Tea* or *Sugary Frappe* recommends *Fresh Mosambi Juice* or *Hot Coffee*.
+- **`DESSERT` ‚Üí `DESSERT`**: *Fruit Chill* or *Brownie* recommends lighter dessert alternatives.
+- **Health-First Objective**: Health improvement (ŒîH) is given primary priority (1000√ó dominant multiplier) so healthier options always supersede merely cheaper items.
+
+---
+
 ## ?? Live Application & Repositories
 
 - **Live Production URL (GitHub Pages)**: [https://pra27-06.github.io/ecobite/](https://pra27-06.github.io/ecobite/)
@@ -29,40 +53,40 @@ EcoBite AI empowers Indian college students to make healthier, more affordable, 
 
 ---
 
-## ?? Recommended Demo Flow (3ñ5 Minutes)
+## ?? Recommended Demo Flow (3ÔøΩ5 Minutes)
 
 For hackathon judges and evaluators, EcoBite AI is engineered to be experienced as **one connected product**:
 
 ```
 1. Open EcoBite AI Home (/)
-   +-- Notice clean positioning: "Healthier ï Cheaper ï More Sustainable"
-   +-- Notice initial status: "General Mode ó Nationwide Access"
-           ¶
+   +-- Notice clean positioning: "Healthier ÔøΩ Cheaper ÔøΩ More Sustainable"
+   +-- Notice initial status: "General Mode ÔøΩ Nationwide Access"
+           ÔøΩ
            ?
 2. Explore General Food Analysis (/search or /scan)
    +-- Search for "Chole Bhature"
    +-- Review 3D scores: BODY (3.5/10), WALLET (7.2/10), PLANET (5.8/10)
    +-- Observe that internal campus prices remain safely hidden
-           ¶
+           ÔøΩ
            ?
 3. Enter & Verify MAIT Campus (/campus)
    +-- Click "Scan Official Campus QR" (or use demo verification token)
-   +-- Session immediately updates to: "MAIT Campus ó Verified"
+   +-- Session immediately updates to: "MAIT Campus ÔøΩ Verified"
    +-- Unlocks all 4 official MAIT canteens (Amul Shop, Food Mast, Juice Point, Nescafe)
-           ¶
+           ÔøΩ
            ?
 4. Experience the Smart Swap Engine (/swap/Chole%20Bhature)
    +-- Hero message: "You don't just get a score. You get a better option you can actually buy."
    +-- Recommended Campus Alternative: Paneer Sandwich (Amul Shop) at verified ?30
-   +-- Displays: Exact canteen location, in-stock status, and SAVE ?40ñ?45
+   +-- Displays: Exact canteen location, in-stock status, and SAVE ?40ÔøΩ?45
    +-- Notice explicit distinction: "AI Estimate" vs "Verified Campus Data"
-           ¶
+           ÔøΩ
            ?
 5. Accept Smart Swap & Verify Impact Telemetry
    +-- Click "Accept Smart Swap & Log Savings"
    +-- Navigate to Weekly Impact (/impact)
    +-- Observe live ? saved, CO2e avoided, and persistent swap log entry
-           ¶
+           ÔøΩ
            ?
 6. Canteen Admin Dashboard & Live Price Propagation (/admin)
    +-- Normal student access receives 403 Forbidden (RBAC)
@@ -83,13 +107,16 @@ For hackathon judges and evaluators, EcoBite AI is engineered to be experienced 
 - **Deployment**: GitHub Actions (`.github/workflows/deploy.yml`) for GitHub Pages + Firebase Hosting configuration (`firebase.json`)
 - **Security**: Granular Cloud Firestore Security Rules, Role-Based Access Control (Student vs Campus Admin)
 - **Documentation**: 
-  - [`docs/ECOBITE_CONTEXT.md`](docs/ECOBITE_CONTEXT.md) ó Master product context and architecture
-  - [`docs/FIREBASE_SETUP.md`](docs/FIREBASE_SETUP.md) ó Firebase configuration & collection guides
-  - [`docs/MAIT_DATA.md`](docs/MAIT_DATA.md) ó Official MAIT canteen dataset & stall mappings
-  - [`docs/AI_ARCHITECTURE.md`](docs/AI_ARCHITECTURE.md) ó Gemini multimodal architecture & system prompts
-  - [`docs/SECURITY_AUDIT.md`](docs/SECURITY_AUDIT.md) ó Complete security review, rules audit & threat model
-  - [`docs/FINAL_DEMO_CHECKLIST.md`](docs/FINAL_DEMO_CHECKLIST.md) ó Step-by-step verification checklist
-  - [`docs/LIVE_DEMO.md`](docs/LIVE_DEMO.md) ó Comprehensive evaluator guide & live demo manual
+  - [`docs/SMART_SWAP_LOGIC.md`](docs/SMART_SWAP_LOGIC.md) - Category compatibility, health-first ranking, and guardrails
+  - [`docs/CANTEEN_INTELLIGENCE.md`](docs/CANTEEN_INTELLIGENCE.md) - Student demand signals, kitchen prep, and waste mitigation
+  - [`docs/DEMO_MODE.md`](docs/DEMO_MODE.md) - Judge demo mode, two-device presentation, and safe demo QR
+  - [`docs/ECOBITE_CONTEXT.md`](docs/ECOBITE_CONTEXT.md) ÔøΩ Master product context and architecture
+  - [`docs/FIREBASE_SETUP.md`](docs/FIREBASE_SETUP.md) ÔøΩ Firebase configuration & collection guides
+  - [`docs/MAIT_DATA.md`](docs/MAIT_DATA.md) ÔøΩ Official MAIT canteen dataset & stall mappings
+  - [`docs/AI_ARCHITECTURE.md`](docs/AI_ARCHITECTURE.md) ÔøΩ Gemini multimodal architecture & system prompts
+  - [`docs/SECURITY_AUDIT.md`](docs/SECURITY_AUDIT.md) ÔøΩ Complete security review, rules audit & threat model
+  - [`docs/FINAL_DEMO_CHECKLIST.md`](docs/FINAL_DEMO_CHECKLIST.md) ÔøΩ Step-by-step verification checklist
+  - [`docs/LIVE_DEMO.md`](docs/LIVE_DEMO.md) ÔøΩ Comprehensive evaluator guide & live demo manual
 
 ---
 
