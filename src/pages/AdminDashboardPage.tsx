@@ -93,7 +93,7 @@ export const AdminDashboardPage: React.FC = () => {
   // Handle open edit modal
   const handleOpenEdit = (item: MenuItemDoc) => {
     setEditingItem(item);
-    setEditPrice(item.price);
+    setEditPrice(item.price ?? 50);
     setEditAvailable(item.available);
     setEditCategory(item.category);
     setEditSource(item.source || 'MAIT menu board physical audit');

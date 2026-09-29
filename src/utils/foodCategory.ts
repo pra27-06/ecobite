@@ -160,8 +160,10 @@ export function getCategoryBadgeProps(category: FoodCategory): { label: string; 
       return { label: 'Beverage', bgClass: 'bg-cyan-50 border-cyan-200', textClass: 'text-cyan-700' };
     case 'DESSERT':
       return { label: 'Dessert', bgClass: 'bg-rose-50 border-rose-200', textClass: 'text-rose-700' };
+    case 'OTHER':
+      return { label: 'Other', bgClass: 'bg-slate-100 border-slate-200', textClass: 'text-slate-700' };
     default:
-      return { label: 'Meal', bgClass: 'bg-slate-50 border-slate-200', textClass: 'text-slate-700' };
+      return { label: 'Item', bgClass: 'bg-slate-50 border-slate-200', textClass: 'text-slate-700' };
   }
 }
 

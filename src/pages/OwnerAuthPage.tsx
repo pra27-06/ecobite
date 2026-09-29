@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Store, ArrowRight, Lock, Mail, Building2, Sparkles, AlertCircle } from 'lucide-react';
+import { Store, ArrowRight, Lock, Mail, Building2, Sparkles, AlertCircle, User, Coffee } from 'lucide-react';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { useAuth } from '../hooks/useAuth';
@@ -10,10 +10,12 @@ export const OwnerAuthPage: React.FC = () => {
   const { signInWithEmail, signUpWithEmail, setSimulatedRole } = useAuth();
   
   const [isRegister, setIsRegister] = useState(false);
-  const [canteenName, setCanteenName] = useState('');
+  const [managerName, setManagerName] = useState('');
+  const [campusName, setCampusName] = useState('Maharaja Agrasen Institute of Technology');
+  const [campusCode, setCampusCode] = useState('MAIT');
+  const [canteenName, setCanteenName] = useState('Main Campus Canteen');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [campusCode, setCampusCode] = useState('MAIT-DEMO');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -21,10 +23,9 @@ export const OwnerAuthPage: React.FC = () => {
     e.preventDefault();
     setErrorMessage(null);
 
-    // Validate campus code
-    const validCodes = ['MAIT-DEMO', 'MAIT', 'MAIT-DELHI-01'];
-    if (!validCodes.includes(campusCode.trim().toUpperCase())) {
-      setErrorMessage('Invalid Campus Code. Use MAIT-DEMO for the Maharaja Agrasen Institute demo.');
+    const normCampus = campusCode.trim().toUpperCase();
+    if (!normCampus) {
+      setErrorMessage('Please enter a valid Campus Code (e.g. MAIT, DTU, NSUT).');
       return;
     }
 
@@ -32,28 +33,48 @@ export const OwnerAuthPage: React.FC = () => {
 
     try {
       if (isRegister) {
-        const ok = await signUpWithEmail(email, password, canteenName || 'MAIT Canteen Manager');
+        const ok = await signUpWithEmail(email, password, managerName || 'Canteen Manager');
         if (ok) {
-          setSimulatedRole('canteen_owner', 'MAIT');
+          setSimulatedRole('canteen_manager', normCampus, {
+            name: managerName || 'Canteen Manager',
+            campusName: campusName || `${normCampus} Campus`,
+            canteenName: canteenName || 'Main Canteen',
+          });
           navigate('/owner/dashboard');
         } else {
-          // Fallback simulated access for offline judge evaluations
-          setSimulatedRole('canteen_owner', 'MAIT');
+          // Fallback demo access for evaluation
+          setSimulatedRole('canteen_manager', normCampus, {
+            name: managerName || 'Canteen Manager',
+            campusName: campusName || `${normCampus} Campus`,
+            canteenName: canteenName || 'Main Canteen',
+          });
           navigate('/owner/dashboard');
         }
       } else {
         const ok = await signInWithEmail(email, password);
         if (ok) {
-          setSimulatedRole('canteen_owner', 'MAIT');
+          setSimulatedRole('canteen_manager', normCampus, {
+            name: managerName || 'Canteen Manager',
+            campusName: campusName || `${normCampus} Campus`,
+            canteenName: canteenName || 'Main Canteen',
+          });
           navigate('/owner/dashboard');
         } else {
-          // If credentials not in Firebase yet, let them through in demo mode
-          setSimulatedRole('canteen_owner', 'MAIT');
+          // Fallback demo access for evaluation
+          setSimulatedRole('canteen_manager', normCampus, {
+            name: 'Canteen Manager',
+            campusName: campusName || `${normCampus} Campus`,
+            canteenName: canteenName || 'Main Canteen',
+          });
           navigate('/owner/dashboard');
         }
       }
-    } catch (err) {
-      setSimulatedRole('canteen_owner', 'MAIT');
+    } catch {
+      setSimulatedRole('canteen_manager', normCampus, {
+        name: managerName || 'Canteen Manager',
+        campusName: campusName || `${normCampus} Campus`,
+        canteenName: canteenName || 'Main Canteen',
+      });
       navigate('/owner/dashboard');
     } finally {
       setIsLoading(false);
@@ -61,7 +82,11 @@ export const OwnerAuthPage: React.FC = () => {
   };
 
   const handleQuickDemoAccess = () => {
-    setSimulatedRole('canteen_owner', 'MAIT');
+    setSimulatedRole('canteen_manager', 'MAIT', {
+      name: 'MAIT Canteen Manager',
+      campusName: 'Maharaja Agrasen Institute of Technology',
+      canteenName: 'Food Mast Canteen (Block 1)',
+    });
     navigate('/owner/dashboard');
   };
 
@@ -73,10 +98,10 @@ export const OwnerAuthPage: React.FC = () => {
           <Store className="w-7 h-7" />
         </div>
         <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-          Canteen Owner Portal
+          Canteen Manager Portal
         </h1>
         <p className="text-xs text-slate-500">
-          Maharaja Agrasen Institute of Technology (MAIT) Kitchen Intelligence
+          Upload Menus • Review AI Extractions • Demand Intelligence
         </p>
       </div>
 
@@ -91,7 +116,7 @@ export const OwnerAuthPage: React.FC = () => {
               !isRegister ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'
             }`}
           >
-            Owner Sign In
+            Manager Sign In
           </button>
           <button
             type="button"
@@ -100,7 +125,7 @@ export const OwnerAuthPage: React.FC = () => {
               isRegister ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'
             }`}
           >
-            Register Canteen
+            Register College Canteen
           </button>
         </div>
 
@@ -113,34 +138,70 @@ export const OwnerAuthPage: React.FC = () => {
 
         <form onSubmit={handleAuth} className="space-y-3.5">
           {isRegister && (
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Canteen / Stall Name
-              </label>
-              <div className="relative">
-                <Store className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Food Mast Canteen (Block 1)"
-                  value={canteenName}
-                  onChange={(e) => setCanteenName(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                />
+            <>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Manager Full Name
+                </label>
+                <div className="relative">
+                  <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Ramesh Kumar"
+                    value={managerName}
+                    onChange={(e) => setManagerName(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  />
+                </div>
               </div>
-            </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  College / Campus Name
+                </label>
+                <div className="relative">
+                  <Building2 className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Delhi Technological University (DTU)"
+                    value={campusName}
+                    onChange={(e) => setCampusName(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Canteen / Cafeteria Name
+                </label>
+                <div className="relative">
+                  <Coffee className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Main Food Court / Block 1 Canteen"
+                    value={canteenName}
+                    onChange={(e) => setCanteenName(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+            </>
           )}
 
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              Owner Email
+              Manager Work Email
             </label>
             <div className="relative">
               <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="email"
                 required
-                placeholder="owner@mait.ac.in"
+                placeholder="manager@campus.ac.in"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
@@ -168,17 +229,18 @@ export const OwnerAuthPage: React.FC = () => {
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="block text-xs font-bold text-slate-700">
-                Campus Verification Code
+                Campus Code
               </label>
-              <span className="text-[10px] text-indigo-600 font-semibold">Demo: MAIT-DEMO</span>
+              <span className="text-[10px] text-indigo-600 font-semibold">e.g. MAIT, DTU, NSUT</span>
             </div>
             <div className="relative">
               <Building2 className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 required
+                placeholder="MAIT"
                 value={campusCode}
-                onChange={(e) => setCampusCode(e.target.value)}
+                onChange={(e) => setCampusCode(e.target.value.toUpperCase())}
                 className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-xs uppercase font-mono font-bold focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
@@ -191,7 +253,7 @@ export const OwnerAuthPage: React.FC = () => {
             isLoading={isLoading}
             className="w-full justify-center bg-indigo-600 hover:bg-indigo-700 text-white mt-2"
           >
-            {isRegister ? 'Register & Enter Dashboard' : 'Sign In as Canteen Owner'}
+            {isRegister ? 'Register & Enter Manager Portal' : 'Sign In to Manager Portal'}
           </Button>
         </form>
 
@@ -219,7 +281,7 @@ export const OwnerAuthPage: React.FC = () => {
       </Card>
 
       <div className="p-3.5 rounded-2xl bg-slate-100 text-[11px] text-slate-500 text-center leading-relaxed">
-        <strong>Privacy Notice: </strong>Canteen owners see aggregated student demand signals only. No student names, emails, or personal identification records are ever accessible.
+        <strong>Nationwide Campus Ingestion: </strong>Any registered campus canteen manager can upload physical or digital menus, review AI extraction, and instantly publish verified menus for students.
       </div>
     </div>
   );

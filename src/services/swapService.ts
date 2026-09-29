@@ -131,7 +131,7 @@ export const swapService = {
       });
 
       // Authentic price from Firestore if available, otherwise benchmark estimate
-      const originalPrice = matchedOrigMenuItem ? matchedOrigMenuItem.price : 60;
+      const originalPrice: number = matchedOrigMenuItem?.price ?? 60;
 
       // 4. Filter candidates: STRICT CATEGORY MATCH + NOT SAME DISH
       const eligibleCandidates = availableItems.filter((candidate) => {
@@ -165,7 +165,7 @@ export const swapService = {
             hasSwap: false,
             originalFood: {
               name: aiAnalysis.foodName,
-              price: matchedOrigMenuItem?.price,
+              price: matchedOrigMenuItem?.price ?? undefined,
               foodCategory: origCategory,
               healthScore: origHealth,
               sustainabilityScore: origSustainability,
@@ -183,21 +183,22 @@ export const swapService = {
       let bestMoneySaved = 0;
 
       for (const item of eligibleCandidates) {
+        const itemPrice = item.price ?? 50;
         const estimatedCandidateHealth = this.estimateItemHealthScore(item);
         const estimatedCandidateSustainability = this.estimateItemSustainabilityScore(item);
 
         const healthDelta = estimatedCandidateHealth - origHealth;
-        const moneySaved = originalPrice - item.price;
+        const moneySaved = originalPrice - itemPrice;
         const sustDelta = estimatedCandidateSustainability - origSustainability;
 
         // 1. PRICE PROXIMITY RULE (MAX_PRICE_DEVIATION = 10%)
         // The candidate should normally cost LESS THAN OR CLOSE TO the original food.
         const maxAllowedPrice = Math.round(originalPrice * (1 + SWAP_CONFIG.MAX_PRICE_DEVIATION));
-        if (item.price > maxAllowedPrice) {
+        if (itemPrice > maxAllowedPrice) {
           continue; // Strictly reject items exceeding the 10% price tolerance ceiling
         }
         // If candidate is slightly more expensive (within 10%), require meaningful health improvement
-        if (item.price > originalPrice && healthDelta < 0.8) {
+        if (itemPrice > originalPrice && healthDelta < 0.8) {
           continue;
         }
 
@@ -246,7 +247,7 @@ export const swapService = {
             hasSwap: false,
             originalFood: {
               name: aiAnalysis.foodName,
-              price: matchedOrigMenuItem?.price,
+              price: matchedOrigMenuItem?.price ?? undefined,
               foodCategory: origCategory,
               healthScore: origHealth,
               sustainabilityScore: origSustainability,
@@ -273,7 +274,7 @@ export const swapService = {
         canteenName: canteenInfo.name,
         canteenLocation: canteenInfo.location,
         foodCategory: origCategory,
-        price: bestCandidate.price, // Ground-truth price from Firestore
+        price: bestCandidate.price ?? 50, // Ground-truth price from Firestore
         healthScore: recommendedHealth,
         sustainabilityScore: recommendedSust,
         moneySaved: Math.max(0, bestMoneySaved),

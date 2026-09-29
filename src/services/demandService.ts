@@ -300,7 +300,7 @@ export const demandService = {
         category: classifyFoodCategory(item.name, item.category),
         canteenId: item.canteenId,
         canteenName: item.canteenId.replace(/-/g, ' ').toUpperCase(),
-        price: item.price,
+        price: item.price ?? 50,
         searchInterest,
         swapAcceptedCount,
         swapRejectedCount,

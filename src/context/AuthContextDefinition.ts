@@ -14,7 +14,11 @@ export interface AuthContextType {
   signInAnonymously: () => Promise<boolean>;
   signOut: () => Promise<void>;
   clearError: () => void;
-  setSimulatedRole: (role: UserRole, campusId: string | null) => void;
+  setSimulatedRole: (
+    role: UserRole, 
+    campusId: string | null,
+    extra?: { campusName?: string; canteenName?: string; name?: string }
+  ) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);

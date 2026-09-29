@@ -13,10 +13,23 @@ EcoBite AI supports an interactive **Two-Device Presentation Setup** for hackath
 
 | Device | Interface | Role & Capabilities |
 | :--- | :--- | :--- |
-| **Root Portal** | `Landing` (`/`) | Clean role selection screen offering immediate entry to `[ STUDENT ]` or `[ CANTEEN OWNER ]`. |
+| **Root Portal** | `Landing` (`/`) | Clean role selection screen offering immediate entry to `[ STUDENT ]` or `[ CANTEEN MANAGER ]`. |
 | **Device 1 (Student)** | `Student Portal` (`/student`), `Search` (`/search`), `Scan` (`/scan`) | Food discovery, 3D evaluation (Body, Wallet, Planet), category-aware & price-proximate Smart Swaps, explicit `[ SELECT ]` vs `[ REJECT ]` choices, and personal savings tracking. |
-| **Device 2 (Canteen Owner)** | `Canteen Intelligence` (`/owner`) | Real-time Student Demand Intelligence (`SEARCH`, `SMART_SWAP_ACCEPTED`, `SMART_SWAP_REJECTED`), live demand scoring, top searched dishes, menu optimization recommendations, and student counter QR generator without student PII. |
+| **Device 2 (Canteen Manager)** | `Manager Portal` (`/owner` or `/manager`) | Nationwide AI Menu Ingestion (photo/PDF OCR upload + review table), Save Draft vs. Confirm & Publish, Student Demand Intelligence (`SEARCH`, `SMART_SWAP_ACCEPTED`, `SMART_SWAP_REJECTED`), live demand scoring, top searched dishes, and student counter QR generator. |
 | **Audience Smartphone** | Point Camera at On-Screen **Campus QR** | Instantly launches the verified student experience on personal devices with an isolated demo token (`MAIT-DELHI-01`). |
+
+---
+
+## 📤 AI Menu Ingestion & Manager Publishing Engine (Stage 1)
+
+EcoBite does not require manual preloading of every college's menu. Any college canteen manager can register, upload, and publish their own live menu:
+
+1. **AI Vision Ingestion**: Gemini 1.5 Flash Vision extracts dish names, prices, categories, and stock availability from photos, price boards, or PDFs.
+2. **Zero Price Hallucination**: Prices are strictly normalized (`₹40`, `Rs. 40/-`, `40.00` $\to$ `40`). Ambiguous or cropped prices output `null` with `needsReview: true`.
+3. **Manager Review Authority**: The manager edits dishes, assigns categories (`MEAL`, `SNACK`, `BEVERAGE`, `DESSERT`, `OTHER`), corrects prices, or adds new custom items.
+4. **Strict Draft Isolation**: Draft items saved with `[ Save Draft ]` are isolated with `status: 'DRAFT'` and **never** appear in the student portal.
+5. **Instant Live Publishing**: Clicking `[ Confirm & Publish ]` stores `status: 'PUBLISHED'` and `verified: true` in Cloud Firestore, immediately making them live for students scanning the campus QR.
+6. **Detailed Architecture**: See [`docs/MENU_INGESTION_ARCHITECTURE.md`](docs/MENU_INGESTION_ARCHITECTURE.md).
 
 ---
 

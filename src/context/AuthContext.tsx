@@ -96,27 +96,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setError(null);
   };
 
-  const setSimulatedRole = (role: import('../types').UserRole, campusId: string | null) => {
+  const setSimulatedRole = (
+    role: import('../types').UserRole, 
+    campusId: string | null,
+    extra?: { campusName?: string; canteenName?: string; name?: string }
+  ) => {
     setUserDoc((prev) => {
-      const isPrivileged = role === 'campus_admin' || role === 'canteen_owner';
-      const roleName = role === 'campus_admin' 
-        ? 'MAIT Campus Administrator' 
-        : role === 'canteen_owner' 
-        ? 'MAIT Canteen Manager' 
-        : 'Guest Student';
+      const isPrivileged = role === 'campus_admin' || role === 'canteen_owner' || role === 'canteen_manager';
+      const roleName = extra?.name || (role === 'campus_admin' 
+        ? 'Campus Administrator' 
+        : (role === 'canteen_owner' || role === 'canteen_manager')
+        ? (extra?.canteenName ? `${extra.canteenName} Manager` : 'Canteen Manager')
+        : 'Guest Student');
       const roleEmail = role === 'campus_admin' 
         ? 'admin@mait.ac.in' 
-        : role === 'canteen_owner' 
-        ? 'owner@mait.ac.in' 
+        : (role === 'canteen_owner' || role === 'canteen_manager')
+        ? 'manager@campus.ac.in' 
         : '';
+
+      const normCampus = campusId || 'MAIT';
 
       if (!prev) {
         return {
-          userId: role === 'canteen_owner' ? 'canteen-owner-evaluator' : 'admin-evaluator',
+          userId: (role === 'canteen_owner' || role === 'canteen_manager') ? 'canteen-manager-evaluator' : 'admin-evaluator',
           name: roleName,
           email: roleEmail,
           role,
-          campusId,
+          campusId: normCampus,
+          campusName: extra?.campusName || (normCampus === 'MAIT' ? 'Maharaja Agrasen Institute of Technology' : `${normCampus} Campus`),
+          canteenName: extra?.canteenName || 'Main Campus Canteen',
           campusVerified: isPrivileged,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -124,8 +132,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return {
         ...prev,
+        name: extra?.name || prev.name,
         role,
-        campusId,
+        campusId: normCampus,
+        campusName: extra?.campusName || prev.campusName,
+        canteenName: extra?.canteenName || prev.canteenName,
         campusVerified: isPrivileged ? true : prev.campusVerified,
       };
     });

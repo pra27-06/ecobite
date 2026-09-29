@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   QrCode, 
   ShieldAlert, 
@@ -24,6 +24,10 @@ import type { MenuItemDoc } from '../types';
 
 export const CampusAccessPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const rawParamCampus = searchParams.get('campus') || (searchParams.get('qr')?.split('-')[0]) || '';
+  const targetCampus = (rawParamCampus || 'MAIT').toUpperCase();
+
   const { isVerified, campusName, city, verifyCampus, revokeCampus } = useCampus();
   const [isSimulatingScan, setIsSimulatingScan] = useState(false);
   const [selectedCanteenId, setSelectedCanteenId] = useState<string>('all');
@@ -31,9 +35,16 @@ export const CampusAccessPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [campusMenuItems, setCampusMenuItems] = useState<MenuItemDoc[]>([]);
 
+  // Automatically verify when scanning QR / landing with campus param
+  useEffect(() => {
+    if (rawParamCampus && !isVerified) {
+      verifyCampus(targetCampus);
+    }
+  }, [rawParamCampus, isVerified, targetCampus, verifyCampus]);
+
   useEffect(() => {
     if (isVerified) {
-      menuService.getCampusMenu('MAIT', true).then((res) => {
+      menuService.getPublishedMenu(targetCampus).then((res) => {
         if (res.success && res.data) {
           setCampusMenuItems(res.data);
         }
@@ -41,12 +52,12 @@ export const CampusAccessPage: React.FC = () => {
     } else {
       setCampusMenuItems([]);
     }
-  }, [isVerified]);
+  }, [isVerified, targetCampus]);
 
   const handleSimulateScan = () => {
     setIsSimulatingScan(true);
     setTimeout(() => {
-      verifyCampus('mait');
+      verifyCampus(targetCampus.toLowerCase());
       setIsSimulatingScan(false);
     }, 600);
   };
@@ -330,7 +341,9 @@ export const CampusAccessPage: React.FC = () => {
                       ) : (
                         <div>
                           <span className="text-[10px] text-slate-400 block font-medium">Authentic Price</span>
-                          <span className="text-base font-black text-slate-900">₹{item.price}</span>
+                          <span className="text-base font-black text-slate-900">
+                            {item.price !== null && item.price !== undefined ? `₹${item.price}` : 'Price on request'}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -338,7 +351,7 @@ export const CampusAccessPage: React.FC = () => {
                     <div className="text-right">
                       <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
                         <Check className="w-2.5 h-2.5" />
-                        Photo Verified
+                        {item.source === 'manager_published' ? 'Manager Verified' : 'Photo Verified'}
                       </span>
                     </div>
                   </div>

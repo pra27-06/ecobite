@@ -4,7 +4,7 @@
  */
 
 // User Roles
-export type UserRole = 'student' | 'campus_admin' | 'canteen_owner';
+export type UserRole = 'student' | 'campus_admin' | 'canteen_owner' | 'canteen_manager';
 
 // User and Session (Firestore: users/{userId})
 export interface UserDoc {
@@ -13,6 +13,8 @@ export interface UserDoc {
   email: string;
   role: UserRole;
   campusId: string | null;
+  campusName?: string;
+  canteenName?: string;
   campusVerified: boolean;
   createdAt: string;
   updatedAt: string;
@@ -61,8 +63,45 @@ export interface CanteenDoc {
   updatedAt: string;
 }
 
-// Core Food Categories
-export type FoodCategory = 'MEAL' | 'SNACK' | 'BEVERAGE' | 'DESSERT';
+// Core Food Categories (MEAL, SNACK, BEVERAGE, DESSERT, OTHER)
+export type FoodCategory = 'MEAL' | 'SNACK' | 'BEVERAGE' | 'DESSERT' | 'OTHER';
+
+// Menu Ingestion & Upload Document Status
+export type MenuUploadStatus = 'PROCESSING' | 'DRAFT' | 'REVIEW_REQUIRED' | 'PUBLISHED' | 'FAILED';
+
+// Menu Upload Metadata (Firestore: menuUploads/{uploadId})
+export interface MenuUploadDoc {
+  uploadId: string;
+  campusId: string;
+  canteenId: string;
+  uploadedBy: string; // Manager user ID or email
+  originalFileName: string;
+  fileType: string;
+  fileUrl?: string;
+  status: MenuUploadStatus;
+  extractedItemCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Extracted Item representation during Manager Review
+export interface ExtractedMenuItem {
+  name: string;
+  category: FoodCategory;
+  price: number | null;
+  available: boolean;
+  description?: string;
+  confidence?: number; // 0 to 1
+  needsReview?: boolean;
+}
+
+export interface MenuExtractionResult {
+  items: ExtractedMenuItem[];
+  canteenNameGuess?: string;
+  overallConfidence: number;
+  warnings?: string[];
+  rawText?: string;
+}
 
 // Menu Items (Firestore: menuItems/{menuItemId})
 export interface MenuItemDoc {
@@ -72,15 +111,19 @@ export interface MenuItemDoc {
   name: string; // e.g., 'Paneer Sandwich'
   category: string; // raw category, e.g. 'sandwiches', 'indian-meals'
   foodCategory?: FoodCategory; // Normalized canonical category
-  price: number; // Stored in INR (₹)
+  price: number | null; // Stored in INR (₹), null if unclear
   available: boolean;
   description: string;
   imageUrl?: string;
   verified: boolean;
-  source: string; // 'MAIT menu board' | 'admin_portal'
+  source: string; // 'ai_extraction' | 'manual_addition' | 'verified_board'
+  status?: 'DRAFT' | 'PUBLISHED';
+  extractionConfidence?: number;
+  needsReview?: boolean;
   caloriesApprox?: number;
   tags?: string[];
   variants?: Record<string, number>; // e.g. { small: 40, medium: 60, large: 80 }
+  createdAt?: string;
   updatedAt: string;
 }
 
@@ -257,6 +300,7 @@ export interface CanteenDemandItem {
   interestLevel: 'high' | 'medium' | 'lower';
   acceptanceStatus: 'strong' | 'moderate' | 'lower_acceptance';
   recommendation: string;
+  suggestion?: string;
   isAvailable: boolean;
   isDemoSample?: boolean;
 }

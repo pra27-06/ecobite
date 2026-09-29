@@ -5,7 +5,6 @@ import {
   GraduationCap, 
   Store, 
   ArrowRight, 
-  TrendingUp, 
   QrCode, 
   ShieldCheck, 
   CheckCircle2,
@@ -101,32 +100,32 @@ export const RoleSelectionLandingPage: React.FC = () => {
                 <Store className="w-7 h-7" />
               </div>
               <span className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold border border-indigo-500/30 uppercase tracking-wider">
-                Canteen Owner Portal
+                Canteen Manager Portal
               </span>
             </div>
 
             <div>
               <h2 className="text-2xl font-black text-white tracking-tight">
-                I am a Canteen Owner
+                I am a Canteen Manager
               </h2>
               <p className="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed">
-                View real-time student demand intelligence across MAIT counters. Track food searches, swap acceptances, rejection feedback, and generate counter QR codes.
+                Upload physical or digital menus with AI OCR, review and publish live dishes to students, track real-time student demand signals, and generate counter QR codes.
               </p>
             </div>
 
             {/* Feature List */}
             <div className="space-y-2.5 pt-2">
               <div className="flex items-start gap-2.5 text-xs text-slate-300">
-                <BarChart3 className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
-                <span><strong>Live Student Demand Signals:</strong> Searches, accepted swaps, &amp; rejections.</span>
+                <Store className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                <span><strong>AI Menu Ingestion &amp; OCR:</strong> Upload photos/PDFs with human-in-the-loop review.</span>
               </div>
               <div className="flex items-start gap-2.5 text-xs text-slate-300">
-                <TrendingUp className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
-                <span><strong>Top Demanded Dishes:</strong> Real-time demand score computed from student inputs.</span>
+                <BarChart3 className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                <span><strong>Live Student Demand Signals:</strong> Real-time searches, accepted swaps, &amp; feedback.</span>
               </div>
               <div className="flex items-start gap-2.5 text-xs text-slate-300">
                 <QrCode className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
-                <span><strong>Campus Counter QR:</strong> Generate printable QR codes for student verification.</span>
+                <span><strong>Campus Counter QR:</strong> Generate printable QR codes for verified student access.</span>
               </div>
             </div>
           </div>
@@ -136,7 +135,7 @@ export const RoleSelectionLandingPage: React.FC = () => {
               to="/owner"
               className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all"
             >
-              <span>Enter Canteen Owner Portal</span>
+              <span>Enter Canteen Manager Portal</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
 
