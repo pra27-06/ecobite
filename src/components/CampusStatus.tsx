@@ -67,7 +67,7 @@ export const CampusStatus: React.FC<CampusStatusProps> = ({ compact = false }) =
           <p className="text-xs text-slate-500 mt-0.5">
             {isVerified
               ? 'Campus-specific canteen menus and verified stall prices are active.'
-              : 'Public food intelligence active. Scan your official campus QR to unlock live canteen prices.'}
+              : 'Public food intelligence active. Access via your campus link to unlock live canteen prices.'}
           </p>
         </div>
       </div>
@@ -80,7 +80,7 @@ export const CampusStatus: React.FC<CampusStatusProps> = ({ compact = false }) =
             : 'bg-amber-600 hover:bg-amber-700 text-white shadow-xs'
         }`}
       >
-        <span>{isVerified ? 'Manage Access' : 'Verify Campus QR'}</span>
+        <span>{isVerified ? 'Manage Access' : 'Access Campus Menu'}</span>
         <ChevronRight className="w-3.5 h-3.5" />
       </Link>
     </div>

@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { Camera, Search, Sparkles, TrendingUp, ArrowRight, ShieldCheck, IndianRupee, Globe, QrCode } from 'lucide-react';
+import { Camera, Search, Sparkles, TrendingUp, ArrowRight, Building2, Store, CheckCircle2 } from 'lucide-react';
 import { CampusStatus } from '../components/CampusStatus';
 import { FoodCard } from '../components/FoodCard';
 import { Button } from '../components/Button';
-import { DemoAccessModal } from '../components/DemoAccessModal';
 import { MOCK_FOODS } from '../data/mockFoods';
 import { MOCK_WEEKLY_IMPACT } from '../data/mockImpact';
 import { MOCK_USER } from '../data/mockUser';
@@ -12,7 +11,6 @@ import { useCampus } from '../hooks/useCampusAccess';
 
 export const HomePage: React.FC = () => {
   const { isVerified, campusShortName } = useCampus();
-  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
 
   // Highlight recent decisions from mock data
   const recentDecisions = MOCK_FOODS.filter((f) =>
@@ -34,7 +32,7 @@ export const HomePage: React.FC = () => {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs text-slate-500 font-medium">
-              {isVerified ? 'MAIT Session Active' : 'General Mode Session'}
+              {isVerified ? `${campusShortName || 'Campus'} Session Active` : 'General Mode Session'}
             </span>
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           </div>
@@ -69,7 +67,7 @@ export const HomePage: React.FC = () => {
                 leftIcon={<Camera className="w-5 h-5" />}
                 className="w-full justify-center"
               >
-                Scan Food
+                Analyze Food Photo
               </Button>
             </Link>
 
@@ -88,10 +86,10 @@ export const HomePage: React.FC = () => {
               <Button
                 variant="outline"
                 size="lg"
-                leftIcon={<QrCode className="w-5 h-5" />}
+                leftIcon={<Building2 className="w-5 h-5" />}
                 className="w-full justify-center bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border-emerald-400/30"
               >
-                {isVerified ? 'MAIT Stalls' : 'Campus Access'}
+                {isVerified ? 'Campus Stalls' : 'Campus Menu'}
               </Button>
             </Link>
           </div>
@@ -103,35 +101,34 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Two-Device Hackathon Demo Banner */}
+      {/* Verified Ground Truth Highlights */}
       <div className="p-4 sm:p-5 rounded-3xl bg-emerald-50/70 border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs">
         <div className="flex items-center gap-3.5">
           <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-            <Sparkles className="w-5 h-5" />
+            <CheckCircle2 className="w-5 h-5" />
           </div>
           <div>
             <div className="text-xs font-bold text-slate-900 flex items-center gap-2">
-              <span>Judge & Evaluator Demonstration Mode</span>
+              <span>Authentic Campus Ground Truth</span>
               <span className="px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900 text-[10px] font-extrabold uppercase">
-                Two Devices
+                Verified
               </span>
             </div>
             <p className="text-[11px] text-slate-500 mt-0.5">
-              Run EcoBite on two screens simultaneously: Laptop 1 (Student View) + Laptop 2 (Canteen Owner View).
+              Dishes, prices, and stock availability are directly linked to Cloud Firestore records published by your campus canteen manager.
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setIsDemoModalOpen(true)}
+        <Link
+          to="/campus"
           className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-colors shadow-2xs shrink-0"
         >
-          <QrCode className="w-4 h-4" />
-          <span>Launch Demo &amp; QR</span>
-        </button>
+          <Store className="w-4 h-4" />
+          <span>Browse Campus Stalls</span>
+        </Link>
       </div>
 
-      {/* Quick Action Navigation */}
+      {/* Quick Action Navigation - ONLY STUDENT CONTROLS */}
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Link
           to="/swap"
@@ -163,7 +160,7 @@ export const HomePage: React.FC = () => {
             </div>
             <div>
               <div className="text-sm font-bold text-slate-900 group-hover:text-amber-800 transition-colors">
-                Weekly Impact
+                My Impact
               </div>
               <div className="text-xs text-slate-500">
                 Cumulative money saved and CO₂ offset.
@@ -174,126 +171,77 @@ export const HomePage: React.FC = () => {
         </Link>
 
         <Link
-          to="/owner"
-          className="group p-5 rounded-2xl bg-white border border-slate-200 hover:border-slate-800 hover:shadow-md transition-all flex items-center justify-between"
+          to="/campus"
+          className="group p-5 rounded-2xl bg-white border border-slate-200 hover:border-emerald-300 hover:shadow-md transition-all flex items-center justify-between"
         >
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center shrink-0 group-hover:bg-slate-800 transition-colors">
-              <span className="font-bold text-sm">B2B</span>
+            <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+              <Store className="w-6 h-6" />
             </div>
             <div>
-              <div className="text-sm font-bold text-slate-900 group-hover:text-slate-800 transition-colors">
-                Canteen Owner
+              <div className="text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
+                Campus Canteen Menu
               </div>
               <div className="text-xs text-slate-500">
-                Student demand &amp; kitchen waste insights.
+                Browse verified stalls and authentic prices.
               </div>
             </div>
           </div>
-          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-slate-900 group-hover:translate-x-1 transition-all shrink-0" />
+          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all shrink-0" />
         </Link>
       </section>
 
-      {/* Demo Access Modal */}
-      <DemoAccessModal
-        isOpen={isDemoModalOpen}
-        onClose={() => setIsDemoModalOpen(false)}
-      />
-
-      {/* Impact Snapshot (Demo values clearly labelled) */}
-      <section className="p-6 rounded-2xl bg-white border border-slate-200 space-y-4 shadow-xs">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-bold text-slate-900 text-base">Weekly Activity & Impact</h3>
-            <p className="text-xs text-slate-500">
-              Demo figures illustrating student impact telemetry
-            </p>
-          </div>
-          <Link
-            to="/impact"
-            className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 inline-flex items-center gap-1"
-          >
-            <span>View Full Stats</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-200/60">
-            <div className="flex items-center gap-1.5 text-amber-800 text-xs font-bold uppercase tracking-wider">
-              <IndianRupee className="w-3.5 h-3.5" />
-              <span>Money Saved</span>
-            </div>
-            <div className="text-2xl font-black text-slate-900 mt-1">₹{MOCK_WEEKLY_IMPACT.moneySaved}</div>
-            <div className="text-[11px] text-slate-500 mt-0.5">from smart food choices</div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200/60">
-            <div className="flex items-center gap-1.5 text-emerald-800 text-xs font-bold uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Smart Swaps</span>
-            </div>
-            <div className="text-2xl font-black text-slate-900 mt-1">{MOCK_WEEKLY_IMPACT.smartSwapsCount}</div>
-            <div className="text-[11px] text-slate-500 mt-0.5">accepted this week</div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200/60">
-            <div className="flex items-center gap-1.5 text-blue-800 text-xs font-bold uppercase tracking-wider">
-              <TrendingUp className="w-3.5 h-3.5" />
-              <span>Food Decisions</span>
-            </div>
-            <div className="text-2xl font-black text-slate-900 mt-1">{MOCK_WEEKLY_IMPACT.foodDecisionsCount}</div>
-            <div className="text-[11px] text-slate-500 mt-0.5">analyzed & logged</div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
-            <div className="flex items-center gap-1.5 text-slate-700 text-xs font-bold uppercase tracking-wider">
-              <Globe className="w-3.5 h-3.5 text-emerald-600" />
-              <span>CO₂ Avoided</span>
-            </div>
-            <div className="text-2xl font-black text-slate-900 mt-1">{MOCK_WEEKLY_IMPACT.estimatedCo2Kg} kg</div>
-            <div className="text-[11px] text-slate-500 mt-0.5">estimated reduction</div>
-          </div>
-        </div>
-
-        <p className="text-[11px] text-slate-400 italic">
-          * Note: Values displayed above are demo values for prototype evaluation. Real student impact records will populate from Cloud Firestore.
-        </p>
-      </section>
-
-      {/* Recent Food Decisions */}
+      {/* Popular Campus Foods Grid */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-bold text-slate-900 text-base">Recent Decisions</h3>
+            <h3 className="text-lg font-bold text-slate-900">Popular Campus Meals</h3>
             <p className="text-xs text-slate-500">
-              Popular college meals analyzed on Health, Affordability, and Carbon impact
+              Evaluated with real campus availability and honest ratings.
             </p>
           </div>
           <Link
             to="/search"
-            className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 inline-flex items-center gap-1"
+            className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 flex items-center gap-1"
           >
-            <span>Browse All Foods</span>
+            <span>View All</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {recentDecisions.map((food) => (
-            <FoodCard key={food.id} food={food} showSwapAction={isVerified} />
+            <FoodCard key={food.id} food={food} />
           ))}
         </div>
       </section>
 
-      {/* Data Principle Notice */}
-      <div className="p-4 rounded-xl bg-slate-100 border border-slate-200 text-xs text-slate-600 flex items-start gap-3">
-        <ShieldCheck className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
-        <div>
-          <span className="font-bold text-slate-800">Ground-Truth Guarantee: </span>
-          EcoBite strictly pairs AI nutrition reasoning with verified database facts. {isVerified ? `Active verified campus is ${campusShortName}.` : 'Currently in General Mode.'}
+      {/* Honest Impact Teaser */}
+      <section className="p-6 rounded-3xl bg-slate-900 text-white space-y-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider">
+              <span>Smart Swap Impact</span>
+            </div>
+            <h3 className="text-xl font-bold">Your Cumulative Health &amp; Savings</h3>
+            <p className="text-xs text-slate-400 max-w-lg">
+              Every accepted Smart Swap logs genuine financial savings and estimated environmental improvements.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-6 shrink-0 bg-white/5 p-4 rounded-2xl border border-white/10">
+            <div>
+              <span className="text-[10px] text-slate-400 uppercase font-bold block">Money Saved</span>
+              <span className="text-xl font-black text-emerald-400">₹{MOCK_WEEKLY_IMPACT.moneySaved}</span>
+            </div>
+            <div className="w-px h-8 bg-white/10" />
+            <div>
+              <span className="text-[10px] text-slate-400 uppercase font-bold block">Healthier Swaps</span>
+              <span className="text-xl font-black text-white">{MOCK_WEEKLY_IMPACT.smartSwapsCount}</span>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 };

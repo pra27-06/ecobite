@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Store, ArrowRight, Lock, Mail, Building2, Sparkles, AlertCircle, User, Coffee } from 'lucide-react';
+import { Store, ArrowLeft, Lock, Mail, Building2, Sparkles, AlertCircle, User, Coffee } from 'lucide-react';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { useAuth } from '../hooks/useAuth';
@@ -270,11 +270,11 @@ export const OwnerAuthPage: React.FC = () => {
 
           <div className="text-center">
             <Link
-              to="/student"
-              className="text-xs text-slate-500 hover:text-emerald-700 font-medium inline-flex items-center gap-1"
+              to="/"
+              className="text-xs text-slate-500 hover:text-indigo-600 font-medium inline-flex items-center gap-1.5 transition-colors"
             >
-              <span>Switch to Student Portal</span>
-              <ArrowRight className="w-3 h-3" />
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back to Role Selection</span>
             </Link>
           </div>
         </div>

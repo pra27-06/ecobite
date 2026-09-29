@@ -1,8 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
-  QrCode, 
-  ShieldAlert, 
   CheckCircle2, 
   ArrowRight, 
   Building, 
@@ -11,7 +9,10 @@ import {
   Lock, 
   Search, 
   Store, 
-  Check
+  Check,
+  ShieldAlert,
+  Sparkles,
+  Link as LinkIcon
 } from 'lucide-react';
 import { PageHeader } from '../components/PageHeader';
 import { Button } from '../components/Button';
@@ -29,19 +30,20 @@ export const CampusAccessPage: React.FC = () => {
   const targetCampus = (rawParamCampus || 'MAIT').toUpperCase();
 
   const { isVerified, campusName, city, verifyCampus, revokeCampus } = useCampus();
-  const [isSimulatingScan, setIsSimulatingScan] = useState(false);
+  const [manualCode, setManualCode] = useState('');
   const [selectedCanteenId, setSelectedCanteenId] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [campusMenuItems, setCampusMenuItems] = useState<MenuItemDoc[]>([]);
 
-  // Automatically verify when scanning QR / landing with campus param
+  // Automatically verify when landing with a campus param from manager's generated link
   useEffect(() => {
     if (rawParamCampus && !isVerified) {
       verifyCampus(targetCampus);
     }
   }, [rawParamCampus, isVerified, targetCampus, verifyCampus]);
 
+  // Fetch published menu for verified campus
   useEffect(() => {
     if (isVerified) {
       menuService.getPublishedMenu(targetCampus).then((res) => {
@@ -54,15 +56,17 @@ export const CampusAccessPage: React.FC = () => {
     }
   }, [isVerified, targetCampus]);
 
-  const handleSimulateScan = () => {
-    setIsSimulatingScan(true);
-    setTimeout(() => {
-      verifyCampus(targetCampus.toLowerCase());
-      setIsSimulatingScan(false);
-    }, 600);
+  const handleManualAccess = (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = manualCode.trim().toUpperCase() || 'MAIT';
+    verifyCampus(code);
   };
 
-  // Extract unique categories for MAIT items
+  const handleInstantDemoAccess = () => {
+    verifyCampus('MAIT');
+  };
+
+  // Extract unique categories for items
   const categories = useMemo(() => {
     const cats = new Set<string>();
     campusMenuItems.forEach((item) => {
@@ -84,15 +88,17 @@ export const CampusAccessPage: React.FC = () => {
     });
   }, [campusMenuItems, selectedCanteenId, selectedCategory, searchQuery]);
 
+  const activeCampusTitle = campusName || (targetCampus === 'MAIT' ? 'Maharaja Agrasen Institute of Technology' : `${targetCampus} Campus`);
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       {/* Header */}
       <PageHeader
-        title="Campus Access & Verification"
-        description="Scan your campus's official EcoBite QR to unlock verified campus food data."
+        title="Campus Menu & Access"
+        description="View live, verified canteen menus and authentic stall prices for your campus."
         badge={
           <Badge variant={isVerified ? 'emerald' : 'amber'} size="md">
-            {isVerified ? `MAIT Campus — Verified` : 'General Public Mode'}
+            {isVerified ? `${targetCampus} Campus — Verified` : 'General Public Mode'}
           </Badge>
         }
         showBackButton
@@ -112,13 +118,13 @@ export const CampusAccessPage: React.FC = () => {
                   <Badge variant="emerald" size="sm">
                     Verified Campus
                   </Badge>
-                  <span className="text-xs text-slate-400">QR Session Active</span>
+                  <span className="text-xs text-slate-400">Campus Access Active</span>
                 </div>
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">
-                  {campusName}
+                  {activeCampusTitle}
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-500 font-medium">
-                  {city}, India • Pilot College Ground Truth
+                  {city || 'Delhi, India'} • Live Verified Menu Ground Truth
                 </p>
               </div>
             </div>
@@ -130,7 +136,7 @@ export const CampusAccessPage: React.FC = () => {
                 rightIcon={<ArrowRight className="w-4 h-4" />}
                 onClick={() => navigate('/search')}
               >
-                Scan / Search Food
+                Search Campus Food
               </Button>
               <Button
                 variant="danger"
@@ -138,28 +144,28 @@ export const CampusAccessPage: React.FC = () => {
                 leftIcon={<LogOut className="w-3.5 h-3.5" />}
                 onClick={revokeCampus}
               >
-                Leave Campus / Revoke Access
+                Exit Campus Session
               </Button>
             </div>
           </div>
 
           <div className="pt-4 border-t border-emerald-200/80 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
             <div className="p-3 rounded-xl bg-white/80 border border-emerald-100">
-              <span className="block text-slate-400 text-[10px] font-bold uppercase">4 Official Stalls</span>
+              <span className="block text-slate-400 text-[10px] font-bold uppercase">Official Stalls</span>
               <span className="font-semibold text-slate-800">Amul, Food Mast, Juice, Nescafé</span>
             </div>
             <div className="p-3 rounded-xl bg-white/80 border border-emerald-100">
               <span className="block text-slate-400 text-[10px] font-bold uppercase">Pricing State</span>
-              <span className="font-semibold text-emerald-700">75+ Ground-Truth Dishes Verified</span>
+              <span className="font-semibold text-emerald-700">{campusMenuItems.length}+ Verified Dishes</span>
             </div>
             <div className="p-3 rounded-xl bg-white/80 border border-emerald-100">
               <span className="block text-slate-400 text-[10px] font-bold uppercase">Smart Swaps</span>
-              <span className="font-semibold text-slate-800">Bounded to MAIT Menu</span>
+              <span className="font-semibold text-slate-800">Bounded to {targetCampus} Menu</span>
             </div>
           </div>
         </Card>
       ) : (
-        /* Not Verified State Card */
+        /* Not Verified State Card - Link & Code Access */
         <Card variant="highlight" padding="lg" className="space-y-6 text-center">
           <div className="w-16 h-16 mx-auto rounded-3xl bg-amber-100 text-amber-800 flex items-center justify-center">
             <ShieldAlert className="w-8 h-8" />
@@ -170,35 +176,44 @@ export const CampusAccessPage: React.FC = () => {
               Current Status: Not Verified
             </Badge>
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
-              Unlock Your Campus Canteen
+              Access Your Campus Canteen
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-              You are currently viewing general national food intelligence. To see real canteen prices, stall menus, and campus Smart Swaps, verify your physical campus access.
+              Open the campus access link provided by your canteen manager, or enter your campus code below to view live canteen prices and Smart Swaps.
             </p>
           </div>
 
-          {/* Verification CTA */}
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Button
-              variant="primary"
-              size="lg"
-              leftIcon={<QrCode className="w-5 h-5" />}
-              isLoading={isSimulatingScan}
-              onClick={handleSimulateScan}
-            >
-              Scan Official Campus QR
-            </Button>
-          </div>
+          {/* Campus Code Input Form */}
+          <form onSubmit={handleManualAccess} className="max-w-sm mx-auto space-y-3">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={manualCode}
+                placeholder="Enter Campus Code (e.g. MAIT)"
+                onChange={(e) => setManualCode(e.target.value.toUpperCase())}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-xs uppercase font-mono font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              />
+              <Button type="submit" variant="primary" size="md">
+                Access Menu
+              </Button>
+            </div>
 
-          <p className="text-[11px] text-slate-500 max-w-sm mx-auto">
-            (Demo Action: Clicking the button above simulates scanning the official MAIT QR code poster stationed at the canteen).
-          </p>
+            {/* Quick Demo Access for Evaluators */}
+            <button
+              type="button"
+              onClick={handleInstantDemoAccess}
+              className="w-full py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-200 flex items-center justify-center gap-1.5 transition-colors"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+              <span>1-Click Access: MAIT Campus Demo</span>
+            </button>
+          </form>
 
           {/* Preview of locked canteens */}
           <div className="pt-6 border-t border-amber-200/60 text-left">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-1.5">
               <Lock className="w-3.5 h-3.5 text-amber-600" />
-              <span>Protected Campus Stalls (Prices Locked)</span>
+              <span>Campus Stall Offerings (Locked in Public Mode)</span>
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {MAIT_CANTEENS_DOCS.map((canteen) => (
@@ -211,7 +226,7 @@ export const CampusAccessPage: React.FC = () => {
                     <span className="block text-[11px] text-slate-500">{canteen.location}</span>
                   </div>
                   <Badge variant="amber" size="sm">
-                    Locked
+                    Protected
                   </Badge>
                 </div>
               ))}
@@ -227,10 +242,10 @@ export const CampusAccessPage: React.FC = () => {
             <div>
               <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
                 <Store className="w-5 h-5 text-emerald-600" />
-                <span>MAIT Official Canteen Catalog</span>
+                <span>{activeCampusTitle} Official Menu Catalog</span>
               </h2>
               <p className="text-xs text-slate-500">
-                Authentic prices extracted directly from on-site menu board photos. Zero hallucinated numbers.
+                Authentic prices extracted directly from verified canteen menus. Zero hallucinated numbers.
               </p>
             </div>
             <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 shrink-0">
@@ -250,43 +265,46 @@ export const CampusAccessPage: React.FC = () => {
             >
               All Stalls ({campusMenuItems.length})
             </button>
-            {MAIT_CANTEENS_DOCS.map((canteen) => (
-              <button
-                key={canteen.canteenId}
-                onClick={() => setSelectedCanteenId(canteen.canteenId)}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-colors shrink-0 ${
-                  selectedCanteenId === canteen.canteenId
-                    ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-700/20'
-                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                {canteen.name}
-              </button>
-            ))}
+            {MAIT_CANTEENS_DOCS.map((canteen) => {
+              const count = campusMenuItems.filter((i) => i.canteenId === canteen.canteenId).length;
+              return (
+                <button
+                  key={canteen.canteenId}
+                  onClick={() => setSelectedCanteenId(canteen.canteenId)}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-colors shrink-0 ${
+                    selectedCanteenId === canteen.canteenId
+                      ? 'bg-emerald-600 text-white shadow-sm'
+                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  {canteen.name} ({count})
+                </button>
+              );
+            })}
           </div>
 
-          {/* Search & Category Filter Bar */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          {/* Search & Category Filter */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Search canteen dishes (e.g. patties, maggi, juice, chawal)..."
+                placeholder="Search dishes or categories..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
 
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
               {categories.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-3 py-2 rounded-xl text-xs capitalize whitespace-nowrap transition-colors ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold capitalize transition-colors shrink-0 ${
                     selectedCategory === cat
-                      ? 'bg-emerald-100 text-emerald-900 font-bold'
-                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
                   {cat}
@@ -372,15 +390,15 @@ export const CampusAccessPage: React.FC = () => {
         </section>
       )}
 
-      {/* QR Architecture Explanation */}
+      {/* Architecture Explanation */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card padding="md" className="space-y-3">
           <div className="flex items-center gap-2 text-slate-900 font-bold text-sm">
-            <QrCode className="w-4 h-4 text-emerald-600" />
-            <h3>How Campus QR Works</h3>
+            <LinkIcon className="w-4 h-4 text-emerald-600" />
+            <h3>Link-Based Campus Verification</h3>
           </div>
           <p className="text-xs text-slate-600 leading-relaxed">
-            Your campus QR identifies the campus. It does <strong>not</strong> store the entire menu or price list inside the QR code. Scanning the QR safely authenticates your campus identity and tells EcoBite to fetch the latest verified documents from Cloud Firestore.
+            Your canteen manager shares an official campus link or counter QR poster. Opening the link verifies your campus access directly in your browser without requiring any camera scanning inside the app.
           </p>
         </Card>
 
@@ -390,24 +408,24 @@ export const CampusAccessPage: React.FC = () => {
             <h3>Multi-Campus Ready Architecture</h3>
           </div>
           <p className="text-xs text-slate-600 leading-relaxed">
-            Selecting a college from a public dropdown does not grant access. For this hackathon prototype, <strong>MAIT</strong> is the only active campus with authentic records. Additional campuses (DTU, NSUT) will be onboarded cleanly without frontend code modifications.
+            Every participating institution (MAIT, DTU, NSUT) maintains its own isolated catalog. Opening your campus access link displays authentic items and live prices from Cloud Firestore.
           </p>
         </Card>
       </div>
 
-      {/* Verification Card Visual Specimen */}
+      {/* Counter Poster Reference */}
       <div className="p-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
             <Info className="w-4 h-4 text-slate-500" />
-            <span>Campus Poster QR Code Specimen</span>
+            <span>Official Campus Access Reference</span>
           </div>
           <span className="text-[10px] font-mono bg-white px-2 py-0.5 rounded border border-slate-200 text-slate-500">
-            ID: MAIT-MAIN-CANTEEN-2026
+            ID: {targetCampus}-MAIN-CANTEEN-2026
           </span>
         </div>
         <p className="text-xs text-slate-500 leading-relaxed">
-          Physical posters stationed inside college dining halls provide students a single scan point. This guarantees that campus pricing remains exclusive to enrolled students physically on premises.
+          Counter posters and links stationed at dining counters give students instant access to live daily menus and Smart Swaps.
         </p>
       </div>
     </div>

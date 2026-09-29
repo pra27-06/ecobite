@@ -67,7 +67,7 @@ export const DemoAccessModal: React.FC<DemoAccessModalProps> = ({ isOpen, onClos
             EcoBite AI Interactive Demo
           </h2>
           <p className="text-xs text-slate-500 leading-relaxed">
-            Select a demo experience or scan the demo QR code with a secondary phone or laptop for a two-device presentation.
+            Select a demo experience or copy/open the demo link with a secondary phone or laptop for evaluation.
           </p>
         </div>
 

@@ -467,15 +467,15 @@ export const FoodAnalysisPage: React.FC = () => {
             <Lock className="w-6 h-6 text-slate-400 mx-auto" />
             <div className="max-w-md mx-auto space-y-1">
               <h4 className="font-bold text-slate-800 text-xs sm:text-sm">
-                Campus prices locked behind QR access
+                Campus prices locked behind campus access
               </h4>
               <p className="text-xs text-slate-500">
-                Canteen prices for this dish are protected. Scan your campus QR code to access Maharaja Agrasen Institute of Technology live stall prices.
+                Canteen prices for this dish are protected. Open your campus access link to access Maharaja Agrasen Institute of Technology live stall prices.
               </p>
             </div>
             <Link to="/campus">
               <Button variant="outline" size="sm">
-                Verify Campus QR
+                Access Campus Menu
               </Button>
             </Link>
           </div>

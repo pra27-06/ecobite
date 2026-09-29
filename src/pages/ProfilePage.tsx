@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { QrCode, ShieldCheck, Bell, Lock, ChevronRight, CheckCircle2, Building, BookOpen, LogIn, LogOut, Key } from 'lucide-react';
+import { QrCode, ShieldCheck, Bell, Lock, ChevronRight, CheckCircle2, Building, BookOpen, LogIn, LogOut, Key, ArrowLeftRight } from 'lucide-react';
 import { PageHeader } from '../components/PageHeader';
 import { Card } from '../components/Card';
 import { Badge } from '../components/Badge';
@@ -61,8 +61,8 @@ export const ProfilePage: React.FC = () => {
 
           <div className="flex items-center gap-2 shrink-0">
             <Link to="/campus">
-              <Button variant="outline" size="sm" leftIcon={<QrCode className="w-4 h-4" />}>
-                {isVerified ? 'View Campus QR' : 'Verify Campus QR'}
+              <Button variant="outline" size="sm" leftIcon={<Building className="w-4 h-4" />}>
+                {isVerified ? 'Campus Menu' : 'Access Campus Menu'}
               </Button>
             </Link>
           </div>
@@ -238,30 +238,30 @@ export const ProfilePage: React.FC = () => {
           </div>
         </Card>
 
-        {/* MAIT Canteen Admin Portal Entry */}
+        {/* Switch Portal Role */}
         <Link
-          to="/admin"
-          className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 hover:border-amber-300 hover:bg-amber-50 transition-all flex items-center justify-between group"
+          to="/"
+          className="p-4 rounded-2xl bg-slate-50 border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/40 transition-all flex items-center justify-between group"
         >
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 group-hover:bg-amber-200 transition-colors">
-              <ShieldCheck className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-100 group-hover:text-emerald-800 transition-colors">
+              <ArrowLeftRight className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h4 className="font-bold text-slate-900 text-sm group-hover:text-amber-900 transition-colors">
-                  MAIT Canteen Admin Dashboard
+                <h4 className="font-bold text-slate-900 text-sm group-hover:text-emerald-900 transition-colors">
+                  Switch Portal Role
                 </h4>
-                <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded">
-                  Admin Portal
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-slate-200 text-slate-700 px-2 py-0.5 rounded">
+                  Student / Manager
                 </span>
               </div>
               <p className="text-xs text-slate-500">
-                Authorized staff portal to manage live prices, stock availability, and campus stall offerings.
+                Return to the role selection landing screen to switch between Student and Manager portals.
               </p>
             </div>
           </div>
-          <ChevronRight className="w-4 h-4 text-amber-500 group-hover:text-amber-800 group-hover:translate-x-0.5 transition-transform shrink-0" />
+          <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
         </Link>
 
         {/* About EcoBite & Architecture */}
