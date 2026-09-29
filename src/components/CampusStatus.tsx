@@ -8,7 +8,7 @@ export interface CampusStatusProps {
 }
 
 export const CampusStatus: React.FC<CampusStatusProps> = ({ compact = false }) => {
-  const { isVerified, campusShortName } = useCampus();
+  const { isVerified } = useCampus();
 
   if (compact) {
     return (
@@ -23,7 +23,7 @@ export const CampusStatus: React.FC<CampusStatusProps> = ({ compact = false }) =
         {isVerified ? (
           <>
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Verified {campusShortName || 'Campus'}</span>
+            <span>MAIT Campus — Verified</span>
           </>
         ) : (
           <>
@@ -58,7 +58,7 @@ export const CampusStatus: React.FC<CampusStatusProps> = ({ compact = false }) =
                 isVerified ? 'text-emerald-700' : 'text-amber-800'
               }`}
             >
-              {isVerified ? `Verified ${campusShortName} Campus` : 'General Public Mode'}
+              {isVerified ? 'MAIT Campus — Verified' : 'General Mode — Nationwide Access'}
             </span>
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/80 border border-slate-200 text-slate-600 font-medium">
               {isVerified ? 'Active Session' : 'Unrestricted'}

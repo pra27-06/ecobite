@@ -198,6 +198,25 @@ export const SmartSwapPage: React.FC = () => {
         </Card>
       ) : (
         <>
+          {/* Hero Value Proposition */}
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-900 via-slate-900 to-slate-900 text-white shadow-sm flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-sm sm:text-base font-extrabold tracking-tight">
+                  You don't just get a score. You get a better option you can actually buy.
+                </h2>
+                <p className="text-xs text-slate-300">
+                  {isVerified
+                    ? 'Grounded in authentic MAIT canteen menus, verified pricing, and live stall inventory.'
+                    : 'Grounded in national college nutrition and affordability benchmarks.'}
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Main Before/After Comparison Flow */}
           <div className="space-y-4">
             {/* Your Current Choice */}
@@ -207,22 +226,32 @@ export const SmartSwapPage: React.FC = () => {
                   🍽️
                 </div>
                 <div>
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                    Your Initial Selection
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      CURRENT SELECTION
+                    </span>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 uppercase tracking-wider">
+                      {originalFood.price !== undefined ? 'Verified Price' : 'Estimated Base'}
+                    </span>
                   </div>
-                  <h3 className="text-xl font-bold text-slate-900 leading-tight">
+                  <h3 className="text-xl font-bold text-slate-900 leading-tight mt-0.5">
                     {originalFood.name}
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
                     {originalFood.price !== undefined
                       ? `Authentic Campus Price: ₹${originalFood.price}`
-                      : 'Approximate National Baseline'}
+                      : 'Approximate National Baseline: ₹60'}
                   </p>
                 </div>
               </div>
-              <Badge variant="rose" size="sm">
-                Score: {originalFood.healthScore.toFixed(1)} / 10
-              </Badge>
+              <div className="flex items-center sm:flex-col items-end gap-1.5 shrink-0">
+                <Badge variant="rose" size="sm">
+                  Health: {originalFood.healthScore.toFixed(1)} / 10
+                </Badge>
+                <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider">
+                  AI Estimate
+                </span>
+              </div>
             </div>
 
             {/* Swap Divider Pill */}
@@ -242,25 +271,43 @@ export const SmartSwapPage: React.FC = () => {
                     ✨
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800">
-                        {isVerified ? 'Campus Verified Swap' : 'General Recommendation'}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800">
+                        {isVerified ? 'RECOMMENDED SMART SWAP' : 'GENERAL RECOMMENDATION'}
                       </span>
-                      <Badge variant="emerald" size="sm">
-                        Optimal Pick
-                      </Badge>
+                      {isVerified ? (
+                        <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300 uppercase tracking-wider">
+                          Verified Campus Data
+                        </span>
+                      ) : (
+                        <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 uppercase tracking-wider">
+                          General Benchmark
+                        </span>
+                      )}
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black text-slate-900 leading-tight mt-0.5">
                       {recommendedSwap.name}
                     </h3>
 
-                    {/* Canteen Location - Strictly from Firestore when verified */}
+                    {/* Canteen Location & Availability - Strictly from Firestore when verified */}
                     {isVerified && recommendedSwap.canteenName ? (
-                      <div className="flex items-center gap-1.5 text-xs text-slate-600 mt-1">
-                        <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>
-                          Available at: <strong>{recommendedSwap.canteenName}</strong> ({recommendedSwap.canteenLocation})
-                        </span>
+                      <div className="space-y-1 mt-1 text-xs text-slate-600">
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>
+                            Available at: <strong>{recommendedSwap.canteenName}</strong> ({recommendedSwap.canteenLocation})
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[11px]">
+                          <span className="text-emerald-700 font-semibold inline-flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            In Stock • Live Campus Counter
+                          </span>
+                          <span className="text-slate-400">•</span>
+                          <span className="text-slate-500 font-medium">
+                            Verified MAIT Menu
+                          </span>
+                        </div>
                       </div>
                     ) : (
                       <div className="text-xs text-slate-500 mt-1 italic">
@@ -270,16 +317,23 @@ export const SmartSwapPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-white border border-emerald-200 text-right shrink-0">
-                  <div className="text-[10px] uppercase font-bold text-slate-400">
-                    {isVerified ? 'Canteen Price' : 'Estimated Cost'}
+                <div className="p-4 rounded-xl bg-white border border-emerald-200 text-right shrink-0 shadow-xs">
+                  <div className="flex items-center justify-end gap-1.5">
+                    <span className="text-[10px] uppercase font-bold text-slate-400">
+                      {isVerified ? 'Canteen Price' : 'Estimated Cost'}
+                    </span>
+                    {isVerified && (
+                      <span className="text-[8px] font-bold px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 uppercase tracking-wider border border-emerald-200">
+                        Firestore
+                      </span>
+                    )}
                   </div>
-                  <div className="text-2xl font-black text-emerald-700">
+                  <div className="text-2xl font-black text-emerald-700 mt-0.5">
                     ₹{recommendedSwap.price}
                   </div>
                   {recommendedSwap.moneySaved > 0 && (
-                    <div className="text-[11px] font-semibold text-emerald-600">
-                      Save ₹{recommendedSwap.moneySaved}
+                    <div className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 mt-1">
+                      SAVE ₹{recommendedSwap.moneySaved}
                     </div>
                   )}
                 </div>

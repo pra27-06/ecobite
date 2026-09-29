@@ -208,10 +208,15 @@ export const FoodAnalysisPage: React.FC = () => {
       />
 
       {/* Estimation Disclaimer */}
-      <div className="flex items-center gap-2 text-[11px] text-slate-400 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200">
-        <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-        <span>
-          <strong>AI-based estimate: </strong>Approximate nutritional and cost values. Not clinical laboratory measurements.
+      <div className="flex items-center justify-between text-[11px] text-slate-500 bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-200">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span>
+            <strong>AI Estimate: </strong>Estimated from available food information. Educational guide, not clinical medical diagnosis.
+          </span>
+        </div>
+        <span className="hidden sm:inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-200/70 text-slate-700">
+          Non-Clinical
         </span>
       </div>
 

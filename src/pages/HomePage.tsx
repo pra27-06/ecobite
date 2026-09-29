@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Camera, Search, Sparkles, TrendingUp, ArrowRight, ShieldCheck, IndianRupee, Globe } from 'lucide-react';
+import { Camera, Search, Sparkles, TrendingUp, ArrowRight, ShieldCheck, IndianRupee, Globe, QrCode } from 'lucide-react';
 import { CampusStatus } from '../components/CampusStatus';
 import { FoodCard } from '../components/FoodCard';
 import { Button } from '../components/Button';
@@ -24,14 +24,16 @@ export const HomePage: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Student Dashboard
+              Student Food Decision Platform
             </span>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
               Good morning, {MOCK_USER.name} 👋
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-500 font-medium">Demo Profile</span>
+            <span className="text-xs text-slate-500 font-medium">
+              {isVerified ? 'MAIT Session Active' : 'General Mode Session'}
+            </span>
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
           </div>
         </div>
@@ -40,12 +42,12 @@ export const HomePage: React.FC = () => {
         <CampusStatus />
       </div>
 
-      {/* Primary Action Hero: "What are you eating today?" */}
+      {/* Primary Action Hero: "Healthier. Cheaper. More Sustainable." */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-6 sm:p-8 text-white shadow-lg">
         <div className="relative z-10 max-w-2xl space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-emerald-300 text-xs font-semibold backdrop-blur-xs">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Health • Budget • Carbon</span>
+            <span>Healthier • Cheaper • More Sustainable</span>
           </div>
 
           <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight leading-tight">
@@ -53,7 +55,7 @@ export const HomePage: React.FC = () => {
           </h2>
 
           <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
-            Scan your plate or search campus meals to get immediate nutritional clarity, affordability checks, and smarter alternatives.
+            AI evaluates the nutrition, budget, and carbon footprint of your meals. Then, Smart Swap finds real, verified alternatives available right at your campus canteen.
           </p>
 
           {/* Primary Action Buttons */}
@@ -77,6 +79,17 @@ export const HomePage: React.FC = () => {
                 className="w-full justify-center bg-white/10 text-white hover:bg-white/20 border-white/20"
               >
                 Search Food
+              </Button>
+            </Link>
+
+            <Link to="/campus" className="flex-1 sm:flex-initial">
+              <Button
+                variant="outline"
+                size="lg"
+                leftIcon={<QrCode className="w-5 h-5" />}
+                className="w-full justify-center bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border-emerald-400/30"
+              >
+                {isVerified ? 'MAIT Stalls' : 'Campus Access'}
               </Button>
             </Link>
           </div>

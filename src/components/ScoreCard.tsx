@@ -58,8 +58,13 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
             <Icon className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              {config.label}
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                {config.label}
+              </span>
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 uppercase tracking-wider">
+                AI Estimate
+              </span>
             </div>
             <div className="text-sm font-bold text-slate-800 leading-tight">
               {config.title}

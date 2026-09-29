@@ -1,6 +1,7 @@
 # EcoBite AI ??
 
-> **AI-Powered Food Decision Platform for Indian College Campuses**
+> **AI-Powered Food Decision Platform for Indian College Campuses**  
+> *"Healthier. Cheaper. More Sustainable."*
 
 EcoBite AI empowers Indian college students to make healthier, more affordable, and eco-conscious food choices by bridging universal nutritional intelligence with verified, live campus canteen menus and pricing.
 
@@ -14,7 +15,53 @@ EcoBite AI empowers Indian college students to make healthier, more affordable, 
 2. **Physical QR Access Protocol**: Selecting a college from a dropdown does **not** grant access. Official QR codes deployed at physical campus locations verify legitimate students.
 3. **Database = Verified Facts | AI = Reasoning**: Generative AI evaluates nutrition and recommends Smart Swaps, but **never fabricates** campus prices or menu availability. All prices and stock status are grounded in verified database records.
 4. **Multi-Campus Architecture**: Scalable isolation via `campusId`. **Maharaja Agrasen Institute of Technology (MAIT), Rohini, Delhi** is the official pilot institution.
-5. **No Marketing Hype / Honest Metrics**: All impact metrics (money saved, estimated carbon avoided) are derived exclusively from actual user Smart Swap logs. When a user has 0 logs, the platform displays an honest empty state: *"Your weekly impact will appear here after your first Smart Swap."*
+5. **Clear Badging (Responsible AI)**: The interface strictly distinguishes **AI ESTIMATE** (nutritional approximations, health scores) from **VERIFIED CAMPUS DATA** (audited menu prices, stall locations, counter stock).
+6. **No Marketing Hype / Honest Metrics**: All impact metrics (money saved, estimated carbon avoided) are derived exclusively from actual user Smart Swap logs. When a user has 0 logs, the platform displays an honest empty state: *"Your impact journey starts with your first Smart Swap."*
+
+---
+
+## ?? Recommended Demo Flow (3–5 Minutes)
+
+For hackathon judges and evaluators, EcoBite AI is engineered to be experienced as **one connected product**:
+
+```
+1. Open EcoBite AI Home (/)
+   +-- Notice clean positioning: "Healthier • Cheaper • More Sustainable"
+   +-- Notice initial status: "General Mode — Nationwide Access"
+           ¦
+           ?
+2. Explore General Food Analysis (/search or /scan)
+   +-- Search for "Chole Bhature"
+   +-- Review 3D scores: BODY (3.5/10), WALLET (7.2/10), PLANET (5.8/10)
+   +-- Observe that internal campus prices remain safely hidden
+           ¦
+           ?
+3. Enter & Verify MAIT Campus (/campus)
+   +-- Click "Scan Official Campus QR" (or use demo verification token)
+   +-- Session immediately updates to: "MAIT Campus — Verified"
+   +-- Unlocks all 4 official MAIT canteens (Amul Shop, Food Mast, Juice Point, Nescafe)
+           ¦
+           ?
+4. Experience the Smart Swap Engine (/swap/Chole%20Bhature)
+   +-- Hero message: "You don't just get a score. You get a better option you can actually buy."
+   +-- Recommended Campus Alternative: Paneer Sandwich (Amul Shop) at verified ?30
+   +-- Displays: Exact canteen location, in-stock status, and SAVE ?40–?45
+   +-- Notice explicit distinction: "AI Estimate" vs "Verified Campus Data"
+           ¦
+           ?
+5. Accept Smart Swap & Verify Impact Telemetry
+   +-- Click "Accept Smart Swap & Log Savings"
+   +-- Navigate to Weekly Impact (/impact)
+   +-- Observe live ? saved, CO2e avoided, and persistent swap log entry
+           ¦
+           ?
+6. Canteen Admin Dashboard & Live Price Propagation (/admin)
+   +-- Normal student access receives 403 Forbidden (RBAC)
+   +-- Click "Simulate MAIT Campus Admin Role"
+   +-- Locate "Paneer Sandwich" (Amul Shop) ? Edit price from ?30 to ?35 ? Save
+   +-- Click "Switch to Student Session"
+   +-- Revisit Campus Stalls (/campus) or Smart Swap: Paneer Sandwich immediately displays ?35!
+```
 
 ---
 
@@ -31,6 +78,7 @@ EcoBite AI empowers Indian college students to make healthier, more affordable, 
   - [`docs/MAIT_DATA.md`](docs/MAIT_DATA.md) — Official MAIT canteen dataset & stall mappings
   - [`docs/AI_ARCHITECTURE.md`](docs/AI_ARCHITECTURE.md) — Gemini multimodal architecture & system prompts
   - [`docs/SECURITY_AUDIT.md`](docs/SECURITY_AUDIT.md) — Complete security review, rules audit & threat model
+  - [`docs/FINAL_DEMO_CHECKLIST.md`](docs/FINAL_DEMO_CHECKLIST.md) — Step-by-step verification checklist
 
 ---
 
@@ -44,8 +92,8 @@ EcoBite AI empowers Indian college students to make healthier, more affordable, 
   - **PLANET (Sustainability 0-10)**: Estimated carbon footprint (kg CO2e) and water impact.
 
 ### 2. Campus-Aware Smart Swaps (Pilot: MAIT)
-- When a verified MAIT student analyzes a less healthy or expensive dish (e.g. Chole Bhature ?75 or Chowmein ?60), EcoBite scans real MAIT canteen menus (Main Canteen, Mini Canteen, Nescafe, Juice Corner).
-- Recommends healthier, high-value alternatives actually available at that exact campus (e.g. Paneer Sandwich ?30, Rajma Rice ?40, Vegetable Poha ?25).
+- When a verified MAIT student analyzes a less healthy or expensive dish, EcoBite scans real MAIT canteen menus (Amul Shop, Food Mast, Juice Point, Nescafe).
+- Recommends healthier, high-value alternatives actually available at that exact campus (e.g. Paneer Sandwich, Rajma Chawal, Vegetable Poha).
 - Displays exact money saved and nutritional delta.
 
 ### 3. Persistent Smart Swap & Impact Logging
@@ -60,55 +108,10 @@ EcoBite AI empowers Indian college students to make healthier, more affordable, 
 
 ### 5. MAIT Canteen Admin Dashboard (`/admin`, `/admin/mait`)
 - Dedicated administrative interface for authorized campus cafeteria operators (`role: 'campus_admin'`, `campusId: 'MAIT'`).
-- Live stall overview across MAIT's 4 canteens: Main Canteen, Mini Canteen, Nescafe, Juice Corner.
+- Live stall overview across MAIT's 4 canteens: Amul Shop, Food Mast, Juice Point, Nescafe.
 - Instant item editing: update prices (e.g. Paneer Sandwich from ?30 to ?35), toggle in-stock / sold-out availability, add new cafeteria dishes.
 - **Instant Student-Facing Propagation**: Menu edits update immediately across student search, stall listings, and Smart Swap recommendations without any hardcoded fallbacks.
 - **403 Security Guard**: Access denied for unauthenticated or non-admin students. Includes an Evaluator Demo Switch for rapid role testing by hackathon judges.
-
----
-
-## ?? Project Structure
-
-```
-ecobite/
-+-- docs/
-¦   +-- ECOBITE_CONTEXT.md       # Master architectural specification
-¦   +-- FIREBASE_SETUP.md        # Firebase console and collection guide
-¦   +-- MAIT_DATA.md             # Ground-truth MAIT canteen dataset
-¦   +-- AI_ARCHITECTURE.md       # Gemini prompt engineering & pipeline
-¦   +-- SECURITY_AUDIT.md        # Complete security audit and rules review
-+-- public/                      # Static assets and demo verification QRs
-+-- src/
-¦   +-- components/              # Shared UI components (Navbar, MobileNav, Card, Badge, etc.)
-¦   +-- context/                 # AuthContext and state providers
-¦   +-- data/                    # Pilot datasets and mock knowledge base
-¦   +-- firebase/                # Firebase SDK client initialization
-¦   +-- hooks/                   # Custom React hooks (useAuth, useCampusAccess)
-¦   +-- layouts/                 # Root application shell & mobile navigation
-¦   +-- pages/                   # Application views:
-¦   ¦   +-- HomePage.tsx         # Universal landing & fast search
-¦   ¦   +-- SearchPage.tsx       # Food search with 3D ratings
-¦   ¦   +-- FoodAnalysisPage.tsx # AI Body / Wallet / Planet analysis
-¦   ¦   +-- SmartSwapPage.tsx    # Campus-grounded Smart Swap decision
-¦   ¦   +-- WeeklyImpactPage.tsx # Real user savings & carbon avoided
-¦   ¦   +-- CampusAccessPage.tsx # Physical QR scanner & MAIT stall menus
-¦   ¦   +-- AdminDashboardPage.tsx # Canteen manager price & stock dashboard
-¦   ¦   +-- ProfilePage.tsx      # Student settings & session state
-¦   ¦   +-- ContextPage.tsx      # In-app architecture & product docs
-¦   +-- services/                # Backend connectors:
-¦   ¦   +-- aiService.ts         # Gemini AI multimodal food analyzer
-¦   ¦   +-- authService.ts       # Firebase Authentication connector
-¦   ¦   +-- campusService.ts     # QR verification & token validation
-¦   ¦   +-- impactService.ts     # Impact & swap decision persistence
-¦   ¦   +-- menuService.ts       # Canteen catalogs & dynamic admin overrides
-¦   +-- types/                   # TypeScript interfaces (Firestore schema)
-¦   +-- utils/                   # Formatter functions (currency, carbon metrics)
-+-- .env.example                 # Safe environment variable template
-+-- firestore.rules              # Cloud Firestore security rules
-+-- storage.rules                # Firebase Storage security rules
-+-- package.json                 # Dependencies and npm scripts
-+-- vite.config.ts               # Vite configuration
-```
 
 ---
 
@@ -148,32 +151,19 @@ npm run preview
 
 ---
 
-## ?? Evaluator Verification Guide
+## ??? Security Posture & Rules Overview
 
-### Scenario A: Public General Mode (Any Student Nationwide)
-1. Navigate to `/` or `/search`.
-2. Search for `Chole Bhature` or click **Scan Food** at `/scan`.
-3. View the 3D analysis: **BODY** (3.5/10), **WALLET** (7.2/10), **PLANET** (5.8/10).
-4. Notice that MAIT canteen prices are protected and not shown.
-5. Visit `/impact`. Notice the genuine empty state: *"Your weekly impact will appear here after your first Smart Swap."*
+Cloud Firestore Security Rules (`firestore.rules`) enforce granular least-privilege access:
+- **Canteen Menus (`/menuItems`)**: Public read is restricted to verified campus sessions. Write operations require `isCampusAdmin(campusId)`. Students can **never** edit prices.
+- **User Roles (`/users`)**: Role escalation is blocked server-side; students cannot self-assign `campus_admin` or `campusVerified: true`.
+- **Impact Logs (`/impactLogs`)**: Query and read access are strictly owner-isolated (`request.auth.uid == userId`); updates and deletes are disabled.
+- **Secrets Management**: No private keys or service accounts committed. Safe environment templates provided in `.env.example`.
 
-### Scenario B: Campus Verification (MAIT Pilot)
-1. Navigate to `/campus` and click **Verify Campus Access**.
-2. Scan the official MAIT QR code (or click "Use Demo Verification Token").
-3. Verification unlocks: **Main Canteen**, **Mini Canteen**, **Nescafe**, and **Juice Corner**.
-4. Real MAIT canteen items and prices are now unlocked.
+---
 
-### Scenario C: Smart Swap & Real Impact Logging
-1. From `/scan` or `/search`, analyze `Chole Bhature`.
-2. Click **Find Smart Swap on Campus**.
-3. EcoBite queries MAIT's catalog and recommends **Paneer Sandwich (Main Canteen)** at ?30 or **Vegetable Poha (Mini Canteen)** at ?25.
-4. Click **Accept Swap & Log Savings**.
-5. Navigate to `/impact`. Notice the real ?45 savings, CO2 reduction, and persistent log entry!
+## ?? Known Prototype Limitations (Honest Assessment)
 
-### Scenario D: Canteen Admin Price Edit & Immediate Student Propagation
-1. Navigate to `/admin` or click **MAIT Admin** in the navigation bar.
-2. If currently logged in as a normal student, an access denial screen (403 Forbidden) appears.
-3. Click the **Evaluator Demo Switch** to switch into `campus_admin` role.
-4. Locate **Paneer Sandwich** (Main Canteen) and click **Edit**.
-5. Change the price from **?30** to **?35** and save.
-6. Open `/campus` or re-run a Smart Swap: notice that Paneer Sandwich immediately displays the updated verified price of **?35**!
+1. **Pilot Scope**: Only **MAIT** has an audited, verified menu dataset extracted from physical menu board photographs. No fake or unverified data exists for other colleges (e.g. DTU, NSUT).
+2. **Static QR Token for Evaluation**: The physical QR code uses a static identifier token (`MAIT_CAMPUS_AUTH_TOKEN_V1`) to enable easy evaluation. A commercial production deployment will introduce rotating TOTP tokens regenerated every 60 seconds on physical cafeteria displays.
+3. **Client-Assisted Timestamps**: Impact log timestamps are recorded via client ISO strings or Firestore server timestamps; high-security production deployments will enforce server-only timestamps via Cloud Functions.
+4. **Local Override Layer**: To guarantee smooth live evaluator demos even when running offline or without active Firebase credentials, price adjustments made in `/admin` persist to `localStorage` and memory.

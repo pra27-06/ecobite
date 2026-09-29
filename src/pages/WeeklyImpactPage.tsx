@@ -95,19 +95,19 @@ export const WeeklyImpactPage: React.FC = () => {
         />
 
         <StatCard
-          label="Food Decisions"
+          label="Estimated CO₂e Avoided"
+          value={`${summary?.estimatedCo2Kg || 0} kg`}
+          subtext="approx. carbon reduction"
+          icon={<Globe className="w-4 h-4" />}
+          variant="slate"
+        />
+
+        <StatCard
+          label="Meals Optimized"
           value={summary?.foodDecisionsCount || 0}
           subtext="dishes logged & reviewed"
           icon={<TrendingUp className="w-4 h-4" />}
           variant="blue"
-        />
-
-        <StatCard
-          label="Estimated CO₂ Saved"
-          value={`${summary?.estimatedCo2Kg || 0} kg`}
-          subtext="approx. carbon offset"
-          icon={<Globe className="w-4 h-4" />}
-          variant="slate"
         />
       </div>
 
@@ -119,10 +119,10 @@ export const WeeklyImpactPage: React.FC = () => {
           </div>
           <div className="max-w-md mx-auto space-y-2">
             <h3 className="text-lg font-bold text-slate-900">
-              No smart swaps yet.
+              Your impact journey starts with your first Smart Swap.
             </h3>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Your first accepted swap will appear here. Whenever you accept a healthier or more affordable campus food recommendation, your real pocket savings (₹) and estimated carbon reductions will be tracked here.
+              No smart swaps recorded yet. Whenever you accept a healthier or more affordable campus food recommendation, your real pocket savings (₹) and estimated carbon reductions will appear here.
             </p>
           </div>
           <div className="pt-2">

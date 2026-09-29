@@ -24,7 +24,7 @@ import type { MenuItemDoc } from '../types';
 
 export const CampusAccessPage: React.FC = () => {
   const navigate = useNavigate();
-  const { isVerified, campusName, campusShortName, city, verifyCampus, revokeCampus } = useCampus();
+  const { isVerified, campusName, city, verifyCampus, revokeCampus } = useCampus();
   const [isSimulatingScan, setIsSimulatingScan] = useState(false);
   const [selectedCanteenId, setSelectedCanteenId] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -78,10 +78,10 @@ export const CampusAccessPage: React.FC = () => {
       {/* Header */}
       <PageHeader
         title="Campus Access & Verification"
-        description="Campus-specific prices and menus are available only after verified campus access. This safeguards authentic college canteen pricing."
+        description="Scan your campus's official EcoBite QR to unlock verified campus food data."
         badge={
           <Badge variant={isVerified ? 'emerald' : 'amber'} size="md">
-            {isVerified ? `Active: ${campusShortName}` : 'General Public Mode'}
+            {isVerified ? `MAIT Campus — Verified` : 'General Public Mode'}
           </Badge>
         }
         showBackButton

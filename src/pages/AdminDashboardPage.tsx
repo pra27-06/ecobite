@@ -428,6 +428,7 @@ export const AdminDashboardPage: React.FC = () => {
                 <th className="py-3.5 px-4">Category</th>
                 <th className="py-3.5 px-4">Price (INR)</th>
                 <th className="py-3.5 px-4">Inventory State</th>
+                <th className="py-3.5 px-4">Last Updated</th>
                 <th className="py-3.5 px-4">Source Audit</th>
                 <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
@@ -468,6 +469,11 @@ export const AdminDashboardPage: React.FC = () => {
                         />
                         {item.available ? 'Available' : 'Out of Stock'}
                       </span>
+                    </td>
+                    <td className="py-3.5 px-4 text-[11px] text-slate-500 whitespace-nowrap">
+                      {item.updatedAt
+                        ? new Date(item.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        : 'Verified Base'}
                     </td>
                     <td className="py-3.5 px-4 text-[11px] text-slate-500 max-w-xs truncate">
                       {item.source || 'MAIT menu board physical audit'}
