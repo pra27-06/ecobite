@@ -16,6 +16,7 @@ export const MobileNav: React.FC = () => {
   if (isManagerRoute) {
     const managerNavItems = [
       { to: '/owner/dashboard', label: 'Dashboard', icon: Store },
+      { to: '/owner/orders', label: 'Orders', icon: ShoppingBag },
       { to: '/', label: 'Switch Role', icon: ArrowLeftRight },
     ];
 

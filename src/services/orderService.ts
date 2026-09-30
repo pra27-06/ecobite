@@ -272,7 +272,7 @@ export const orderService = {
       if (matched.available === false) {
         return {
           success: false,
-          error: `"${matched.name}" is currently unavailable. Please refresh the menu.`,
+          error: 'This item is currently unavailable. Please refresh the menu.',
         };
       }
 

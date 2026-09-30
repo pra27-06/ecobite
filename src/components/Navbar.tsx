@@ -49,6 +49,7 @@ export const Navbar: React.FC = () => {
             <nav className="hidden md:flex items-center gap-1.5">
               <NavLink
                 to="/owner/dashboard"
+                end
                 className={({ isActive }) =>
                   `px-3 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 ${
                     isActive
@@ -59,6 +60,20 @@ export const Navbar: React.FC = () => {
               >
                 <BarChart3 className="w-3.5 h-3.5" />
                 <span>Manager Dashboard</span>
+              </NavLink>
+
+              <NavLink
+                to="/owner/orders"
+                className={({ isActive }) =>
+                  `px-3 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+                    isActive
+                      ? 'bg-indigo-600 text-white font-bold'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  }`
+                }
+              >
+                <ShoppingBag className="w-3.5 h-3.5" />
+                <span>Orders</span>
               </NavLink>
 
               <NavLink

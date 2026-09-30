@@ -44,6 +44,8 @@ export const App: React.FC = () => {
               <Route path="manager" element={<OwnerAuthPage />} />
               <Route path="owner/dashboard" element={<CanteenOwnerDashboardPage />} />
               <Route path="manager/dashboard" element={<CanteenOwnerDashboardPage />} />
+              <Route path="owner/orders" element={<CanteenOwnerDashboardPage />} />
+              <Route path="manager/orders" element={<CanteenOwnerDashboardPage />} />
               <Route path="canteen-owner" element={<CanteenOwnerDashboardPage />} />
               <Route path="context" element={<ContextPage />} />
               <Route path="*" element={<NotFoundPage />} />

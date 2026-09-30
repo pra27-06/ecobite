@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -59,10 +59,23 @@ import type {
 
 export const CanteenOwnerDashboardPage: React.FC = () => {
   const { userDoc } = useAuth();
+  const location = useLocation();
   
   const activeCampus = (userDoc?.campusId || 'MAIT').toUpperCase();
   const campusDisplayName = userDoc?.campusName || (activeCampus === 'MAIT' ? 'Maharaja Agrasen Institute of Technology' : `${activeCampus} Campus`);
   const canteenDisplayName = userDoc?.canteenName || 'Main Campus Canteen';
+
+  // Smooth scroll to live order queue if arriving at /orders or #orders
+  useEffect(() => {
+    if (location.pathname.endsWith('/orders') || location.hash === '#orders') {
+      setTimeout(() => {
+        const el = document.getElementById('orders');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+  }, [location.pathname, location.hash]);
 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -563,7 +576,7 @@ export const CanteenOwnerDashboardPage: React.FC = () => {
       )}
 
       {/* SECTION 1: LIVE ORDER QUEUE (CAMPUS PRE-ORDERS) */}
-      <section className="space-y-5">
+      <section id="orders" className="space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
@@ -573,8 +586,8 @@ export const CanteenOwnerDashboardPage: React.FC = () => {
               </span>
               <span className="text-xs font-semibold text-slate-400">• Non-Financial Operations</span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">
-              Today's Order Requests
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1 uppercase tracking-tight">
+              LIVE ORDER QUEUE
             </h2>
             <p className="text-xs text-slate-500 max-w-xl">
               Real-time student pre-orders to prepare before collection. Reduces counter crowding and token delays. Not recorded as revenue or sales.
@@ -714,7 +727,7 @@ export const CanteenOwnerDashboardPage: React.FC = () => {
                   <div className="space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-mono font-black text-sm text-slate-900 bg-white px-2.5 py-0.5 rounded-lg border border-slate-200 shadow-2xs">
-                        #{order.orderId}
+                        #{order.orderId.replace('-', '')}
                       </span>
                       <span className="text-xs font-semibold text-slate-600 flex items-center gap-1">
                         <Store className="w-3.5 h-3.5 text-slate-400" />
@@ -798,7 +811,7 @@ export const CanteenOwnerDashboardPage: React.FC = () => {
                         className="bg-white hover:bg-slate-50 border-emerald-300 text-slate-800 text-xs font-bold shadow-xs"
                         onClick={() => handleUpdateOrderStatus(order.orderId, 'COMPLETED')}
                       >
-                        Complete Order
+                        Complete
                       </Button>
                     )}
 

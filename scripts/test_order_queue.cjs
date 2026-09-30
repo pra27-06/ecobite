@@ -89,7 +89,7 @@ function createOrderSimulation({ campusId, isCampusVerified, canteenId, items, s
     if (!matched.available) {
       return {
         success: false,
-        error: `"${matched.name}" is currently unavailable. Please refresh the menu.`,
+        error: 'This item is currently unavailable. Please refresh the menu.',
       };
     }
 
@@ -172,7 +172,7 @@ const unavailableOrder = createOrderSimulation({
   studentId: 'student-2',
 });
 assert.strictEqual(unavailableOrder.success, false);
-assert.strictEqual(unavailableOrder.error, '"Cold Coffee" is currently unavailable. Please refresh the menu.');
+assert.strictEqual(unavailableOrder.error, 'This item is currently unavailable. Please refresh the menu.');
 console.log('✓ TEST 2 PASSED: Unavailable dish correctly blocked with refresh message.');
 
 console.log('--- TEST 3: Ground Truth Price Verification & Client Tamper Immunity ---');
