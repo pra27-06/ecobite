@@ -63,21 +63,55 @@ export const swapService = {
     // ==========================================
     if (!isCampusVerified) {
       const generalSwap = this.getGeneralSwapBenchmark(originalFoodName, aiAnalysis, origCategory);
+      if (generalSwap) {
+        const hDelta = generalSwap.healthScore - origHealth;
+        const sDelta = generalSwap.sustainabilityScore - origSustainability;
+        const mSaved = generalSwap.moneySaved;
+
+        const hImproves = hDelta > 0.05;
+        const hWorsens = hDelta < -0.05;
+        const sImproves = sDelta > 0.05;
+        const sWorsens = sDelta < -0.05;
+        const aImproves = mSaved > 0.5;
+        const aWorsens = mSaved < -0.5;
+
+        // SMART SWAP CORE RULE: At least one metric strictly improves and none worsens
+        if ((hImproves || sImproves || aImproves) && (!hWorsens && !sWorsens && !aWorsens)) {
+          return {
+            success: true,
+            data: {
+              success: true,
+              isCampusVerified: false,
+              hasSwap: true,
+              originalFood: {
+                name: aiAnalysis.foodName,
+                price: undefined, // Strictly hidden in unverified mode
+                foodCategory: origCategory,
+                healthScore: origHealth,
+                sustainabilityScore: origSustainability,
+                source: 'General Public Estimate',
+              },
+              recommendedSwap: generalSwap,
+            },
+          };
+        }
+      }
+
       return {
         success: true,
         data: {
           success: true,
           isCampusVerified: false,
-          hasSwap: true,
+          hasSwap: false,
           originalFood: {
             name: aiAnalysis.foodName,
-            price: undefined, // Strictly hidden in unverified mode
+            price: undefined,
             foodCategory: origCategory,
             healthScore: origHealth,
             sustainabilityScore: origSustainability,
             source: 'General Public Estimate',
           },
-          recommendedSwap: generalSwap,
+          noSwapReason: 'No verified healthier/better campus option found for this choice.',
         },
       };
     }
@@ -181,6 +215,10 @@ export const swapService = {
       let highestScore = -Infinity;
       let bestReasons: string[] = [];
       let bestMoneySaved = 0;
+      let bestCandidateHealth = 0;
+      let bestCandidateSust = 0;
+
+      const EPSILON = 0.05;
 
       for (const item of eligibleCandidates) {
         const itemPrice = item.price ?? 50;
@@ -188,43 +226,53 @@ export const swapService = {
         const estimatedCandidateSustainability = this.estimateItemSustainabilityScore(item);
 
         const healthDelta = estimatedCandidateHealth - origHealth;
-        const moneySaved = originalPrice - itemPrice;
+        const moneySaved = originalPrice - itemPrice; // positive if cheaper, negative if more expensive
         const sustDelta = estimatedCandidateSustainability - origSustainability;
 
-        // 1. PRICE PROXIMITY RULE (MAX_PRICE_DEVIATION = 10%)
-        // The candidate should normally cost LESS THAN OR CLOSE TO the original food.
-        const maxAllowedPrice = Math.round(originalPrice * (1 + SWAP_CONFIG.MAX_PRICE_DEVIATION));
-        if (itemPrice > maxAllowedPrice) {
-          continue; // Strictly reject items exceeding the 10% price tolerance ceiling
-        }
-        // If candidate is slightly more expensive (within 10%), require meaningful health improvement
-        if (itemPrice > originalPrice && healthDelta < 0.8) {
-          continue;
+        // ----------------------------------------------------
+        // SMART SWAP CORE RULE (3 DECISION DIMENSIONS):
+        // 1. Health
+        // 2. Sustainability
+        // 3. Affordability
+        //
+        // AT LEAST ONE metric must STRICTLY IMPROVE.
+        // AND:
+        // NO metric may become worse.
+        // ----------------------------------------------------
+        const healthImproves = healthDelta > EPSILON;
+        const healthWorsens = healthDelta < -EPSILON;
+
+        const sustImproves = sustDelta > EPSILON;
+        const sustWorsens = sustDelta < -EPSILON;
+
+        // Cheaper = higher affordability (improves). Same price = equal. More expensive = worse.
+        const affordImproves = moneySaved > 0.5;
+        const affordWorsens = moneySaved < -0.5;
+
+        // Rule Check:
+        const atLeastOneImproves = healthImproves || sustImproves || affordImproves;
+        const noMetricWorsens = !healthWorsens && !sustWorsens && !affordWorsens;
+
+        if (!atLeastOneImproves || !noMetricWorsens) {
+          continue; // REJECT: fails the Smart Swap Pareto improvement rule
         }
 
-        // 2. HEALTH FILTER CRITERIA:
-        // - If original food is relatively unhealthy (< 7.0), alternative MUST improve health
-        if (origHealth < 7.0 && healthDelta < SWAP_CONFIG.minHealthThresholdForUnhealthyOriginal) {
-          continue;
-        }
-        // - If original food is already healthy (>= 7.0), alternative must maintain high health (>= 6.8)
-        if (origHealth >= 7.0 && estimatedCandidateHealth < 6.8) {
-          continue;
-        }
-
-        // 3. COMPOSITE SCORING:
-        // Health improvement is the primary objective (dominant multiplier: 1000).
-        // Secondary objectives (money saved and carbon footprint) act as tie-breakers.
-        const savingsScore = moneySaved > 0 ? Math.min(moneySaved, 30) * 1.5 : (moneySaved === 0 ? 5 : -15);
-        const sustScore = Math.max(-5, Math.min(10, sustDelta * 2));
-
-        const compositeScore = (healthDelta * SWAP_CONFIG.healthDominanceMultiplier) + savingsScore + sustScore;
+        // Composite scoring among candidates that strictly qualify
+        const compositeScore = (healthDelta * 100) + (sustDelta * 50) + (moneySaved * 2);
 
         if (compositeScore > highestScore) {
           highestScore = compositeScore;
           bestCandidate = item;
           bestMoneySaved = moneySaved;
-          bestReasons = this.generateSwapReasons(item, aiAnalysis, moneySaved, healthDelta);
+          bestCandidateHealth = estimatedCandidateHealth;
+          bestCandidateSust = estimatedCandidateSustainability;
+          bestReasons = this.generateSwapReasons(
+            item, 
+            aiAnalysis, 
+            originalPrice, 
+            estimatedCandidateHealth, 
+            estimatedCandidateSustainability
+          );
         }
       }
 
@@ -237,7 +285,7 @@ export const swapService = {
         }
       }
 
-      // If no candidate scored high enough or fits within price tolerance
+      // If no candidate scored high enough or satisfies the Pareto rule
       if (!bestCandidate) {
         return {
           success: true,
@@ -247,13 +295,13 @@ export const swapService = {
             hasSwap: false,
             originalFood: {
               name: aiAnalysis.foodName,
-              price: matchedOrigMenuItem?.price ?? undefined,
+              price: matchedOrigMenuItem?.price ?? originalPrice,
               foodCategory: origCategory,
               healthScore: origHealth,
               sustainabilityScore: origSustainability,
               source: matchedOrigMenuItem ? `MAIT (${matchedOrigMenuItem.canteenId})` : 'MAIT Campus Baseline',
             },
-            noSwapReason: 'No healthier verified campus option found within your price range.',
+            noSwapReason: 'No verified healthier/better campus option found for this choice.',
           },
         };
       }
@@ -264,8 +312,8 @@ export const swapService = {
         location: 'Campus Dining Area',
       };
 
-      const recommendedHealth = this.estimateItemHealthScore(bestCandidate);
-      const recommendedSust = this.estimateItemSustainabilityScore(bestCandidate);
+      const recommendedHealth = bestCandidateHealth || this.estimateItemHealthScore(bestCandidate);
+      const recommendedSust = bestCandidateSust || this.estimateItemSustainabilityScore(bestCandidate);
 
       const recommendation: SmartSwapRecommendation = {
         name: bestCandidate.name,
@@ -274,7 +322,7 @@ export const swapService = {
         canteenName: canteenInfo.name,
         canteenLocation: canteenInfo.location,
         foodCategory: origCategory,
-        price: bestCandidate.price ?? 50, // Ground-truth price from Firestore
+        price: bestCandidate.price ?? originalPrice, // Ground-truth price from Firestore
         healthScore: recommendedHealth,
         sustainabilityScore: recommendedSust,
         moneySaved: Math.max(0, bestMoneySaved),
@@ -485,46 +533,43 @@ export const swapService = {
   },
 
   /**
-   * Helper to formulate 3 clear reasons for this swap
+   * Helper to formulate clear reasons for this swap.
+   * Only claims improvements for dimensions that actually strictly improved.
+   * Never claims "healthier" if health did not improve.
    */
   generateSwapReasons(
     candidate: MenuItemDoc,
-    _originalAnalysis: AIFoodAnalysisResult,
-    moneySaved: number,
-    healthDelta: number
+    originalAnalysis: AIFoodAnalysisResult,
+    origPrice: number,
+    candHealth: number,
+    candSust: number
   ): string[] {
     const reasons: string[] = [];
+    const healthDelta = candHealth - originalAnalysis.healthScore;
+    const sustDelta = candSust - originalAnalysis.sustainabilityScore;
+    const moneySaved = origPrice - (candidate.price ?? origPrice);
 
-    // Reason 1: Health / Nutrition
-    if (healthDelta >= 1.0) {
+    // Dimension 1: Health (only claim better health if health strictly improved!)
+    if (healthDelta > 0.05) {
       reasons.push(
-        `Higher nutritional density (+${healthDelta.toFixed(1)} Body score) with cleaner preparation.`
+        `Better health profile (+${healthDelta.toFixed(1)} Body score) with higher nutritional density.`
       );
     } else {
-      reasons.push('Maintains balanced carbohydrate and micronutrient distribution for campus focus.');
+      reasons.push('Comparable nutritional balance with zero decline in dietary quality.');
     }
 
-    // Reason 2: Money / Pocket Savings
-    if (moneySaved > 0) {
-      reasons.push(`Saves ₹${moneySaved} on your daily student budget compared to the initial item.`);
-    } else if (moneySaved === 0) {
-      reasons.push(`Equal cost (₹${candidate.price}), but offers substantially greater satiety and nutrition.`);
+    // Dimension 2: Price / Affordability
+    if (moneySaved > 0.5) {
+      reasons.push(`More affordable: Saves ₹${moneySaved} on your daily campus dining budget.`);
     } else {
-      reasons.push(`High protein value per rupee invested at ₹${candidate.price}.`);
+      reasons.push(`Similar price (₹${candidate.price ?? origPrice}) with verified canteen ground truth.`);
     }
 
-    // Reason 3: Satiety & Preparation
-    const name = candidate.name.toLowerCase();
-    if (name.includes('juice')) {
-      reasons.push('Naturally hydrating with zero artificial coloring or excessive refined sugar.');
-    } else if (name.includes('paneer')) {
-      reasons.push('Packed with lean cottage cheese protein to curb afternoon hunger spikes.');
-    } else if (name.includes('rajma') || name.includes('choley')) {
-      reasons.push('Slow-digesting legume fiber provides steady cognitive energy through afternoon lectures.');
-    } else {
-      reasons.push('Lower saturated fat profile to avoid post-meal classroom sluggishness.');
+    // Dimension 3: Sustainability
+    if (sustDelta > 0.05) {
+      reasons.push('Lower estimated environmental impact with sustainable campus preparation.');
     }
 
-    return reasons.slice(0, 3);
+    return reasons;
   },
 };

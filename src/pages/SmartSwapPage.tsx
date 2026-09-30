@@ -392,7 +392,9 @@ export const SmartSwapPage: React.FC = () => {
                   </span>
                 </div>
                 <div className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded text-center">
-                  +{(recommendedSwap.healthScore - originalFood.healthScore).toFixed(1)} Body Improvement
+                  {recommendedSwap.healthScore - originalFood.healthScore > 0.05
+                    ? `+${(recommendedSwap.healthScore - originalFood.healthScore).toFixed(1)} Body Improvement`
+                    : 'Equal Health Profile'}
                 </div>
               </Card>
 
@@ -414,7 +416,7 @@ export const SmartSwapPage: React.FC = () => {
                 <div className="text-[11px] text-amber-800 font-semibold bg-amber-50 px-2 py-0.5 rounded text-center">
                   {recommendedSwap.moneySaved > 0
                     ? `Save ₹${recommendedSwap.moneySaved}`
-                    : 'Equal Cost • Higher Value'}
+                    : `Similar Price (₹${recommendedSwap.price})`}
                 </div>
               </Card>
 
@@ -434,7 +436,9 @@ export const SmartSwapPage: React.FC = () => {
                   </span>
                 </div>
                 <div className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded text-center">
-                  Lower Ecological Footprint
+                  {recommendedSwap.sustainabilityScore - originalFood.sustainabilityScore > 0.05
+                    ? 'Lower Ecological Footprint'
+                    : 'Equal Ecological Footprint'}
                 </div>
               </Card>
             </div>
