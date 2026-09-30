@@ -5,9 +5,10 @@ import { useCampus } from '../hooks/useCampusAccess';
 
 export interface CampusStatusProps {
   compact?: boolean;
+  onOpenScanModal?: () => void;
 }
 
-export const CampusStatus: React.FC<CampusStatusProps> = ({ compact = false }) => {
+export const CampusStatus: React.FC<CampusStatusProps> = ({ compact = false, onOpenScanModal }) => {
   const { isVerified } = useCampus();
 
   if (compact) {
@@ -67,22 +68,34 @@ export const CampusStatus: React.FC<CampusStatusProps> = ({ compact = false }) =
           <p className="text-xs text-slate-500 mt-0.5">
             {isVerified
               ? 'Campus-specific canteen menus and verified stall prices are active.'
-              : 'Public food intelligence active. Access via your campus link to unlock live canteen prices.'}
+              : 'Public food intelligence active. Scan or enter your canteen code to unlock live prices.'}
           </p>
         </div>
       </div>
 
-      <Link
-        to="/campus"
-        className={`inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold shrink-0 transition-colors ${
-          isVerified
-            ? 'bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200'
-            : 'bg-amber-600 hover:bg-amber-700 text-white shadow-xs'
-        }`}
-      >
-        <span>{isVerified ? 'Manage Access' : 'Access Campus Menu'}</span>
-        <ChevronRight className="w-3.5 h-3.5" />
-      </Link>
+      <div className="flex items-center gap-2 shrink-0">
+        {onOpenScanModal && (
+          <button
+            type="button"
+            onClick={onOpenScanModal}
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs"
+          >
+            <span>Scan Canteen Code</span>
+          </button>
+        )}
+
+        <Link
+          to="/campus"
+          className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
+            isVerified
+              ? 'bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200'
+              : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'
+          }`}
+        >
+          <span>{isVerified ? 'Manage' : 'Campus Menu'}</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+        </Link>
+      </div>
     </div>
   );
 };

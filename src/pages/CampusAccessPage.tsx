@@ -14,13 +14,15 @@ import {
   Sparkles,
   Link as LinkIcon,
   ShoppingBag,
-  Clock
+  Clock,
+  QrCode
 } from 'lucide-react';
 import { PageHeader } from '../components/PageHeader';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Badge } from '../components/Badge';
 import { OrderIntentModal } from '../components/OrderIntentModal';
+import { ScanCanteenCodeModal } from '../components/ScanCanteenCodeModal';
 import { useCampus } from '../hooks/useCampusAccess';
 import { MAIT_CANTEENS_DOCS } from '../data/maitMenuData';
 import { menuService } from '../services/menuService';
@@ -40,6 +42,7 @@ export const CampusAccessPage: React.FC = () => {
   const [campusMenuItems, setCampusMenuItems] = useState<MenuItemDoc[]>([]);
   const [selectedItemForOrder, setSelectedItemForOrder] = useState<MenuItemDoc | null>(null);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [isScanModalOpen, setIsScanModalOpen] = useState(false);
 
   const handleInitiateOrder = (item: MenuItemDoc) => {
     setSelectedItemForOrder(item);
@@ -200,6 +203,26 @@ export const CampusAccessPage: React.FC = () => {
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
               Open the campus access link provided by your canteen manager, or enter your campus code below to view live canteen prices and Smart Swaps.
             </p>
+          </div>
+
+          {/* Scan Counter QR Button */}
+          <div className="max-w-sm mx-auto">
+            <Button
+              type="button"
+              variant="primary"
+              size="md"
+              leftIcon={<QrCode className="w-4 h-4" />}
+              onClick={() => setIsScanModalOpen(true)}
+              className="w-full justify-center bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-xs"
+            >
+              Scan Canteen Counter QR
+            </Button>
+          </div>
+
+          <div className="flex items-center gap-2 max-w-sm mx-auto">
+            <div className="flex-1 h-px bg-slate-200" />
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">or enter code</span>
+            <div className="flex-1 h-px bg-slate-200" />
           </div>
 
           {/* Campus Code Input Form */}
@@ -464,6 +487,12 @@ export const CampusAccessPage: React.FC = () => {
         item={selectedItemForOrder}
         campusId={targetCampus}
         isCampusVerified={isVerified}
+      />
+
+      {/* Scan Canteen Code Modal */}
+      <ScanCanteenCodeModal
+        isOpen={isScanModalOpen}
+        onClose={() => setIsScanModalOpen(false)}
       />
     </div>
   );
