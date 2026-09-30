@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Camera, Search, Sparkles, TrendingUp, ArrowRight, Building2, Store, CheckCircle2 } from 'lucide-react';
+import { Search, Sparkles, TrendingUp, ArrowRight, Building2, Store, CheckCircle2 } from 'lucide-react';
 import { CampusStatus } from '../components/CampusStatus';
 import { FoodCard } from '../components/FoodCard';
 import { Button } from '../components/Button';
@@ -60,23 +60,12 @@ export const HomePage: React.FC = () => {
 
           {/* Primary Action Buttons */}
           <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <Link to="/scan" className="flex-1 sm:flex-initial">
+            <Link to="/search" className="flex-1 sm:flex-initial">
               <Button
                 variant="primary"
                 size="lg"
-                leftIcon={<Camera className="w-5 h-5" />}
-                className="w-full justify-center"
-              >
-                Analyze Food Photo
-              </Button>
-            </Link>
-
-            <Link to="/search" className="flex-1 sm:flex-initial">
-              <Button
-                variant="outline"
-                size="lg"
                 leftIcon={<Search className="w-5 h-5" />}
-                className="w-full justify-center bg-white/10 text-white hover:bg-white/20 border-white/20"
+                className="w-full justify-center"
               >
                 Search Food
               </Button>
@@ -87,7 +76,7 @@ export const HomePage: React.FC = () => {
                 variant="outline"
                 size="lg"
                 leftIcon={<Building2 className="w-5 h-5" />}
-                className="w-full justify-center bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border-emerald-400/30"
+                className="w-full justify-center bg-white/10 text-white hover:bg-white/20 border-white/20"
               >
                 {isVerified ? 'Campus Stalls' : 'Campus Menu'}
               </Button>
