@@ -12,7 +12,8 @@ import {
   Lock, 
   AlertTriangle, 
   Search,
-  ShieldCheck
+  ShieldCheck,
+  ShoppingBag
 } from 'lucide-react';
 import { PageHeader } from '../components/PageHeader';
 import { ScoreCard } from '../components/ScoreCard';
@@ -20,6 +21,7 @@ import { Card } from '../components/Card';
 import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
 import { LoadingState } from '../components/LoadingState';
+import { OrderIntentModal } from '../components/OrderIntentModal';
 import { useCampus } from '../hooks/useCampusAccess';
 import { MAIT_CANTEENS_DOCS } from '../data/maitMenuData';
 import { aiService } from '../services/aiService';
@@ -39,6 +41,8 @@ export const FoodAnalysisPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(!location.state?.aiResult);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [campusItems, setCampusItems] = useState<MenuItemDoc[]>([]);
+  const [selectedItemForOrder, setSelectedItemForOrder] = useState<MenuItemDoc | null>(null);
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
 
   const imagePreview: string | undefined = location.state?.imagePreview;
 
@@ -418,13 +422,27 @@ export const FoodAnalysisPage: React.FC = () => {
                             {canteen?.name || item.canteenId} • {canteen?.location}
                           </span>
                         </div>
-                        <div className="text-right">
-                          <span className="text-base font-black text-emerald-700">
-                            ₹{item.price}
-                          </span>
-                          <span className="block text-[9px] font-semibold text-emerald-600 uppercase">
-                            Board Verified
-                          </span>
+                        <div className="flex items-center gap-3">
+                          <div className="text-right">
+                            <span className="text-base font-black text-emerald-700">
+                              ₹{item.price}
+                            </span>
+                            <span className="block text-[9px] font-semibold text-emerald-600 uppercase">
+                              Board Verified
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedItemForOrder(item);
+                              setIsOrderModalOpen(true);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-xs active:scale-95"
+                            title="Add to campus pre-order queue"
+                          >
+                            <ShoppingBag className="w-3.5 h-3.5" />
+                            <span>Pre-Order</span>
+                          </button>
                         </div>
                       </div>
                     );
@@ -511,6 +529,15 @@ export const FoodAnalysisPage: React.FC = () => {
           Review Smart Swap
         </Button>
       </Card>
+
+      {/* Pre-Order Intent Modal */}
+      <OrderIntentModal
+        isOpen={isOrderModalOpen}
+        onClose={() => setIsOrderModalOpen(false)}
+        item={selectedItemForOrder}
+        campusId={campusShortName || 'MAIT'}
+        isCampusVerified={isVerified}
+      />
     </div>
   );
 };

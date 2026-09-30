@@ -12,6 +12,7 @@ import { SearchFoodPage } from './pages/SearchFoodPage';
 import { FoodAnalysisPage } from './pages/FoodAnalysisPage';
 import { SmartSwapPage } from './pages/SmartSwapPage';
 import { WeeklyImpactPage } from './pages/WeeklyImpactPage';
+import { StudentOrdersPage } from './pages/StudentOrdersPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { CanteenOwnerDashboardPage } from './pages/CanteenOwnerDashboardPage';
@@ -35,6 +36,7 @@ export const App: React.FC = () => {
               <Route path="swap" element={<SmartSwapPage />} />
               <Route path="swap/:foodId" element={<SmartSwapPage />} />
               <Route path="impact" element={<WeeklyImpactPage />} />
+              <Route path="orders" element={<StudentOrdersPage />} />
               <Route path="profile" element={<ProfilePage />} />
               <Route path="admin" element={<AdminDashboardPage />} />
               <Route path="admin/mait" element={<AdminDashboardPage />} />

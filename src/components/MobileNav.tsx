@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Search, Camera, TrendingUp, User, Building2, Store, ArrowLeftRight } from 'lucide-react';
+import { Home, Camera, TrendingUp, User, Building2, Store, ArrowLeftRight, ShoppingBag } from 'lucide-react';
 
 export const MobileNav: React.FC = () => {
   const location = useLocation();
@@ -49,8 +49,8 @@ export const MobileNav: React.FC = () => {
   // Student Mobile Navigation
   const studentNavItems = [
     { to: '/student', label: 'Home', icon: Home },
-    { to: '/campus', label: 'Campus', icon: Building2 },
-    { to: '/search', label: 'Search', icon: Search },
+    { to: '/campus', label: 'Menu', icon: Building2 },
+    { to: '/orders', label: 'Orders', icon: ShoppingBag },
     { to: '/scan', label: 'Analyze', icon: Camera, isSpecial: true },
     { to: '/impact', label: 'Impact', icon: TrendingUp },
     { to: '/profile', label: 'Profile', icon: User },

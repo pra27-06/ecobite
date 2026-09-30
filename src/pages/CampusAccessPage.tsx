@@ -12,12 +12,15 @@ import {
   Check,
   ShieldAlert,
   Sparkles,
-  Link as LinkIcon
+  Link as LinkIcon,
+  ShoppingBag,
+  Clock
 } from 'lucide-react';
 import { PageHeader } from '../components/PageHeader';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Badge } from '../components/Badge';
+import { OrderIntentModal } from '../components/OrderIntentModal';
 import { useCampus } from '../hooks/useCampusAccess';
 import { MAIT_CANTEENS_DOCS } from '../data/maitMenuData';
 import { menuService } from '../services/menuService';
@@ -35,6 +38,13 @@ export const CampusAccessPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [campusMenuItems, setCampusMenuItems] = useState<MenuItemDoc[]>([]);
+  const [selectedItemForOrder, setSelectedItemForOrder] = useState<MenuItemDoc | null>(null);
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+
+  const handleInitiateOrder = (item: MenuItemDoc) => {
+    setSelectedItemForOrder(item);
+    setIsOrderModalOpen(true);
+  };
 
   // Automatically verify when landing with a campus param from manager's generated link
   useEffect(() => {
@@ -137,6 +147,15 @@ export const CampusAccessPage: React.FC = () => {
                 onClick={() => navigate('/search')}
               >
                 Search Campus Food
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                leftIcon={<Clock className="w-3.5 h-3.5 text-emerald-600" />}
+                onClick={() => navigate('/orders')}
+                className="bg-white border-emerald-300 text-emerald-800 hover:bg-emerald-50"
+              >
+                My Pre-Orders
               </Button>
               <Button
                 variant="danger"
@@ -366,11 +385,20 @@ export const CampusAccessPage: React.FC = () => {
                       )}
                     </div>
 
-                    <div className="text-right">
-                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                    <div className="flex items-center gap-2">
+                      <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
                         <Check className="w-2.5 h-2.5" />
-                        {item.source === 'manager_published' ? 'Manager Verified' : 'Photo Verified'}
+                        Verified
                       </span>
+                      <button
+                        type="button"
+                        onClick={() => handleInitiateOrder(item)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-xs active:scale-95"
+                        title="Add to pre-order preparation queue"
+                      >
+                        <ShoppingBag className="w-3.5 h-3.5" />
+                        <span>Confirm Order</span>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -425,9 +453,18 @@ export const CampusAccessPage: React.FC = () => {
           </span>
         </div>
         <p className="text-xs text-slate-500 leading-relaxed">
-          Counter posters and links stationed at dining counters give students instant access to live daily menus and Smart Swaps.
+          Counter posters and links stationed at dining counters give students instant access to live daily menus, pre-order queues, and Smart Swaps.
         </p>
       </div>
+
+      {/* Pre-Order Intent Modal */}
+      <OrderIntentModal
+        isOpen={isOrderModalOpen}
+        onClose={() => setIsOrderModalOpen(false)}
+        item={selectedItemForOrder}
+        campusId={targetCampus}
+        isCampusVerified={isVerified}
+      />
     </div>
   );
 };

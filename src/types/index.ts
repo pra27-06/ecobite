@@ -317,3 +317,36 @@ export interface CanteenDemandOverview {
   mostRejectedSwap: string;
   isDemoSample?: boolean;
 }
+
+// Student Order Intent / Pre-Order Preparation Queue Types
+// STRICT PRINCIPLE: Operational preparation queue only. Zero payment, zero revenue/sales tracking.
+export type OrderRequestStatus = 
+  | 'PENDING' 
+  | 'ACCEPTED' 
+  | 'PREPARING' 
+  | 'READY' 
+  | 'COMPLETED' 
+  | 'CANCELLED';
+
+export interface OrderItem {
+  menuItemId: string;
+  name: string;
+  quantity: number;
+  price: number; // In INR, verified from Firestore records
+  canteenId?: string;
+  category?: string;
+}
+
+export interface OrderRequestDoc {
+  orderId: string; // Formatted reference e.g. 'EC-1024'
+  orderNumber: number; // Numerical reference
+  studentId: string; // Privacy-safe anonymous student token
+  campusId: string; // e.g. 'MAIT'
+  canteenId: string; // e.g. 'amul-shop'
+  canteenName: string; // e.g. 'Amul Shop'
+  items: OrderItem[];
+  totalAmount: number; // Estimated amount in INR
+  status: OrderRequestStatus;
+  createdAt: string; // ISO string
+  updatedAt: string; // ISO string
+}

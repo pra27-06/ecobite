@@ -10,3 +10,5 @@ export * from './impactService';
 export * from './storageService';
 export * from './aiService';
 export * from './swapService';
+export * from './demandService';
+export * from './orderService';
